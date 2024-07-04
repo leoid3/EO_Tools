@@ -1,0 +1,6 @@
+name,coordinate,altitude,timezone,color,sza
+
+Toulouse,"[1.0, 43.0]",120.0,Etc/GMT+2,blue,0
+
+Paris,"[2.0, 45.0]",120.0,Etc/GMT+2,orange,0
+

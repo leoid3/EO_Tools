@@ -1,0 +1,11 @@
+An error occurred:
+Traceback (most recent call last):
+  File "c:\Users\Léo Capitaine\Desktop\Earth Observation Tool\code\Leo\TrafficModelMain.py", line 21, in main
+    map_app = MapApplication(root)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Léo Capitaine\Desktop\Earth Observation Tool\code\Leo\TrafficModelClasses.py", line 27, in __init__
+    self.world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Léo Capitaine\AppData\Local\Programs\Python\Python312\Lib\site-packages\geopandas\datasets\__init__.py", line 18, in get_path
+    raise AttributeError(error_msg)
+AttributeError: The geopandas.dataset has been deprecated and was removed in GeoPandas 1.0. You can get the original 'naturalearth_lowres' data from https://www.naturalearthdata.com/downloads/110m-cultural-vectors/.
