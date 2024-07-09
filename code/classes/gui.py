@@ -30,13 +30,19 @@ class SatelliteSimulator(tk.Tk):
         map_frame.place(relx = 0.48, rely= 0, anchor="n")
         self.__map_widget = tkmap.TkinterMapView(map_frame, width=700,
                                          height=700, corner_radius = 0)
-        #self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
+        self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
         self.__map_widget.place(relx = 0.5, rely=0.5, anchor= tk.CENTER)
         self.__map_widget.set_position(48.860381, 2.338594)  # Paris, France
         self.__map_widget.set_zoom(3)
         self.__map_widget.pack()
         self.__map_widget.add_right_click_menu_command(label="Add POI", command=self.copy_coords_poi, pass_coords=True)
         self.__map_widget.add_right_click_menu_command(label="Add GS", command=self.copy_coords_gs, pass_coords=True)
+
+    def set_map_satellite(self):
+        self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
+    
+    def set_map_default(self):
+        self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
 
     def tab1(self):
         # Frame for the satellite tab
@@ -678,7 +684,6 @@ class SatelliteSimulator(tk.Tk):
         showinfo("Message", "Simulation reseted")
 
     def save_simulation(self):
-        # Placeholder for save logic
         if len(liste_mission)==0:
             showinfo('Error', 'You need to create a least 1 mission')
         else:
