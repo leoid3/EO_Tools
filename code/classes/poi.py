@@ -4,7 +4,7 @@ class Point_of_interest:
     """
     Permet de creer un point d'interet.
     """
-    def __init__(self, n, alt, tm, c, ia = False):
+    def __init__(self, n, alt, tm, c, ia):
         self.__name = n
         self.__coordinates = []
         self.__altitude = alt

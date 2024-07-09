@@ -1,9 +1,7 @@
-import timezonefinder as tz
-import pytz
-import datetime
 
 #Custom libraries
 from config import *
+from functions.find_tm import findtimezone, centroid
 #Classes
 from classes.orbit import Orbit
 from classes.satellite import Satellite
@@ -19,28 +17,23 @@ def init_constellation(name, walkerP, walkerT, walkerF, color, sat_model):
     cons = Constellation(name, walkerP, walkerT, walkerF, color, sat_model)
     return cons
 
-def init_poi(name, long, lat, alt, color):
+def init_poi(name, coord, alt, color, area):
     """
     Permet d'initialiser les points d'interet.
     """
-    tf = tz.TimezoneFinder()
-    timezone_str = tf.certain_timezone_at(lat = lat, lng =long)
-    if timezone_str is None:
-        print("Impossible de trouver la zone temporelle du point, valeur par defaut: Etc/GMT+1")
-        poitz = 'Etc/GMT+1'
+    if area == False:
+        tm = findtimezone(coord)
     else:
-        poitz = pytz.timezone(timezone_str)
-        dt = datetime.datetime.utcnow()
-        print(str(poitz))
-        utcoffset = poitz.localize(dt).strftime('%z')
-        if (int(utcoffset[1:3]) < 10) and (int(utcoffset[1:3]) > -10):
-           tm = 'Etc/GMT'+str(utcoffset[0])+str(utcoffset[2])
-        else: 
-            tm = 'Etc/GMT'+str(utcoffset[0:3])
-        print(tm)
+        x, y= centroid(coord)
+        tm =findtimezone((x, y))
 
-    poi = Point_of_interest(name, alt, tm, color)
-    poi.set_coordinate(lat, long)
+
+    poi = Point_of_interest(name, alt, tm, color, area)
+    if area==False:
+        poi.set_coordinate(coord[1], coord[0])
+    else:
+        for i in range(len(coord)):
+            poi.set_coordinate(coord[i][0], coord[i][1])
     #poi.set_sza(sun_zenith_angle(poi.get_coordinate(0)[0], poi.get_coordinate(0)[1], poi.get_altitude(), poi.get_timezone(), poi.get_name()))
     #print(poi.get_sza())
     return poi
