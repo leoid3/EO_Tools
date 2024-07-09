@@ -11,6 +11,10 @@ liste_gs = []
 liste_constellation = []
 liste_mission = []
 
+#sources maps
+satellite_map = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+normal_map ="https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga"
+
 # Temps de simulation
 TI = '2024-01-01 00:00:00'
 TF = '2024-12-31 23:59:00'

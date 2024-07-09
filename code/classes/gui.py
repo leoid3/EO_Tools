@@ -30,7 +30,7 @@ class SatelliteSimulator(tk.Tk):
         map_frame.place(relx = 0.48, rely= 0, anchor="n")
         self.__map_widget = tkmap.TkinterMapView(map_frame, width=700,
                                          height=700, corner_radius = 0)
-        self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
+        self.__map_widget.set_tile_server(normal_map, max_zoom=20)
         self.__map_widget.place(relx = 0.5, rely=0.5, anchor= tk.CENTER)
         self.__map_widget.set_position(48.860381, 2.338594)  # Paris, France
         self.__map_widget.set_zoom(3)
@@ -42,10 +42,10 @@ class SatelliteSimulator(tk.Tk):
         ttk.Button(map_frame, text="Normal view", command=self.set_map_default).pack(side="left")
 
     def set_map_satellite(self):
-        self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
+        self.__map_widget.set_tile_server(satellite_map, max_zoom=20)
     
     def set_map_default(self):
-        self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
+        self.__map_widget.set_tile_server(normal_map, max_zoom=20)
 
     def tab1(self):
         # Frame for the satellite tab
