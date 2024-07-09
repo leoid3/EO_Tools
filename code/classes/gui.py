@@ -38,6 +38,9 @@ class SatelliteSimulator(tk.Tk):
         self.__map_widget.add_right_click_menu_command(label="Add POI", command=self.copy_coords_poi, pass_coords=True)
         self.__map_widget.add_right_click_menu_command(label="Add GS", command=self.copy_coords_gs, pass_coords=True)
 
+        ttk.Button(map_frame, text="Satellite view", command=self.set_map_satellite).pack(side= "left")
+        ttk.Button(map_frame, text="Normal view", command=self.set_map_default).pack(side="left")
+
     def set_map_satellite(self):
         self.__map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=20)
     
@@ -115,7 +118,6 @@ class SatelliteSimulator(tk.Tk):
 
     def tab2(self):
         const_frame = ttk.LabelFrame(self.main_frame, text="Constellation Creation :", padding=(10, 10))
-        #const_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         const_frame.place(relx= 0.117, rely=0.45, anchor= "n")
 
         self.l_consn = ttk.Label(const_frame, text="Name of the Constellation : ")
@@ -680,6 +682,7 @@ class SatelliteSimulator(tk.Tk):
         self.__map_widget.delete_all_marker()
         self.__map_widget.delete_all_path()
         self.__map_widget.delete_all_polygon()
+        self.set_map_default()
         reset_liste()
         showinfo("Message", "Simulation reseted")
 
