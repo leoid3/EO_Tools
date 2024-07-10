@@ -1,6 +1,6 @@
 from config import *
 
-def plot_orbit_3d(sat, ax, name, color):
+def plot_orbit_3d(sat, ax, name, color, delta):
     """
     Visualise l'orbite en 3D.
     """
@@ -10,7 +10,7 @@ def plot_orbit_3d(sat, ax, name, color):
     ax.set_xlabel('X (km)')
     ax.set_ylabel('Y (km)')
     ax.set_zlabel('Z (km)')
-    ax.set_title('Satellite Orbit in 3D')
+    ax.set_title('Satellite Orbit in 3D for '+ str(delta.days)+" day")
     ax.legend()
 
 

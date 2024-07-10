@@ -23,6 +23,14 @@ def calcul_traj(mission, map):
     ax_2D.stock_img()
 
     liste_ta =[]
+    t0=0
+    delta = mission.get_TF() - mission.get_T0()
+    if delta.days==0:
+        tf=86400
+        dt=mission.get_timestep()
+    else:
+        tf=3600*24*delta.days
+        dt=3600*24*mission.get_timestep()
 
     for i in range(int(const.get_walkerP())):
         walkerT = const.get_walkerT()
@@ -54,14 +62,14 @@ def calcul_traj(mission, map):
             position, velocity = orbital_elements_to_state_vectors(temp_sat.get_orbit())
             state0 = np.concatenate((position, velocity))
             #Ensemble des solutions
-            times, states= runge_kutta_4(deriv, state0, mission.get_T0(), mission.get_TF(), mission.get_timestep())
+            times, states= runge_kutta_4(deriv, state0, t0, tf, dt)
             temp_sat.set_position(states)
             temp_sat.set_velocity(states)
             const.add_sat(temp_sat)
 
             show_sat(temp_sat, ax_3D)
             plot_ground_track(temp_sat, times, ax_2D, const.get_color(), map)
-        plot_orbit_3d(temp_sat, ax_3D, const.get_name(), const.get_color())
+        plot_orbit_3d(temp_sat, ax_3D, const.get_name(), const.get_color(), delta)
     mission.add_constellation(const)
 
     for i in range(mission.get_nb_poi()):

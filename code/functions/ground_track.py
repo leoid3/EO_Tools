@@ -8,7 +8,7 @@ def plot_ground_track(sat, times, ax, color, map):
     """
     lats = []
     lons = []
-    
+    marker_list = []
     x_sat, y_sat, z_sat = sat.get_position()
     vx_sat, vy_sat, vz_sat = sat.get_velocity()
 
@@ -27,14 +27,25 @@ def plot_ground_track(sat, times, ax, color, map):
     for i in range(len(lons) - 1):
         segment_lats.append(lats[i])
         segment_lons.append(lons[i])
+        marker = map.set_marker(lats[i], lons[i])
+        marker_list.append(marker.position)
+        marker.delete()
         if abs(lons[i+1] - lons[i]) > 180:
             segments.append((segment_lats, segment_lons))
+            if len(marker_list) >=2:
+                path = map.set_path(marker_list, color=sat.get_color(), width="1")
+            marker_list=[]
             segment_lats = []
             segment_lons = []
+            
+        
     segment_lats.append(lats[-1])
     segment_lons.append(lons[-1])
     segments.append((segment_lats, segment_lons))
-    
+    marker = map.set_marker(lats[-1], lons[-1])
+    marker_list.append(marker.position)
+    marker.delete()
+    path = map.set_path(marker_list, color=sat.get_color(), width="1")
     label = 'Ground Track of '+str(sat.get_name())
     
     for segment_lats, segment_lons in segments:
@@ -45,38 +56,6 @@ def plot_ground_track(sat, times, ax, color, map):
     ax.set_ylabel('Latitude')
     ax.set_title('Satellite Ground Track')
     ax.legend()
-    
-    """
-    temp_lat = []
-    temp_long = []
-
-    for i in range(len(segment_lats)):
-        temp_lat.append(segment_lats[i])
-    for j in range(len(segment_lons)):
-        temp_long.append(segment_lons[j])
-
-    for k in range(len(temp_lat)):
-        path = map.set_polygon([(temp_lat[k], temp_long[k])], fill_color=None, outline_color=sat.get_color())
-
-    
-    temp_lat = []
-    temp_long = []
-
-    for i in range(len(segment_lats)):
-        temp_lat.append(segment_lats[i])
-    for j in range(len(segment_lons)):
-        temp_long.append(segment_lons[j])
-    markerini = map.set_marker(segment_lats[0], segment_lons[0])
-    for k in range(len(temp_lat)):
-        if k == 0: 
-            marker1 = markerini
-        else:
-            marker1 = map.set_marker(segment_lats[k-1], segment_lons[k-1])
-        marker2 = map.set_marker(segment_lats[k], segment_lons[k])   
-        path = map.set_path([marker1.position, marker2.position])
-        marker1.delete()
-        marker2.delete()
-    """
 
 def show_gs_on_ground_track(gs, ax):
     ax.plot(gs.get_coordinate()[1], gs.get_coordinate()[0], 'o', label=gs.get_name(), color=gs.get_color())

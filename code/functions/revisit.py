@@ -57,4 +57,5 @@ def revisitV2(a, swath_width, depointing, lat_target, long_target, nb_sat):
     
     return revisit
 
-# and (abs(longitude - longitude_target) 
+
+

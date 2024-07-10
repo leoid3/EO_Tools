@@ -8,7 +8,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
     
     #Mission
     mission_data = []
-    mission_fields = ['name', 'duration', 'timestep', 'type', 'minsza', 'poi', 'gs', 'constellation']
+    mission_fields = ['name', 'starttime', 'endtime', 'timestep', 'type', 'minsza', 'poi', 'gs', 'constellation']
     for i in range(len(lm)):
         temp1 = []
         temp2 = []
@@ -20,6 +20,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
             temp2.append(gstemp.get_name())
         temp3 = lm[i].get_constellation()
         mission =[lm[i].get_name(),
+                  lm[i].get_T0(),
                   lm[i].get_TF(),
                   lm[i].get_timestep(),
                   lm[i].get_type(),
@@ -37,14 +38,19 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
     
     #POI
     POI_data = []
-    poi_fields = ['name', 'coordinate', 'altitude','color', 'timezone', 'sza']
+    poi_fields = ['name', 'coordinate', 'altitude','color', 'timezone', 'sza', 'area']
     for i in range(len(lpoi)):
+        if lpoi[i].IsArea() == True:
+            coord = lpoi[i].get_area()
+        else:
+            coord = [lpoi[i].get_coordinate(0)[1], lpoi[i].get_coordinate(0)[0]]
         poi = [lpoi[i].get_name(),
-               [lpoi[i].get_coordinate(0)[1], lpoi[i].get_coordinate(0)[0]],
+               coord,
                lpoi[i].get_altitude(),
                lpoi[i].get_color(),
                lpoi[i].get_timezone(),
-               lpoi[i].get_sza()
+               lpoi[i].get_sza(),
+               lpoi[i].IsArea()
             ]
         POI_data.append(poi)
     filename = "POI.csv"

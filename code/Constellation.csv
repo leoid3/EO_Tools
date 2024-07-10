@@ -1,4 +1,5 @@
 name,walkerT,walkerP,walkerF,satmodel,color
 
-Copernicus,6.0,2.0,2.0,Sentinel,orange
+Copernicus,2,2,1,Sentinel,orange
 
+Test,1.0,1.0,1.0,eccentricity,green

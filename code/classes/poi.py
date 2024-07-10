@@ -45,6 +45,8 @@ class Point_of_interest:
         return self.__resstep
     def IsArea(self):
         return self.__isarea
+    def get_area(self):
+        return self.__coordinates
     def get_coordinate(self, i):
         return self.__coordinates[i]
     def get_sza(self):

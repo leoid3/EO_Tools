@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
+from tktooltip import ToolTip
 import tkintermapview as tkmap
+from tkcalendar import DateEntry
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
 from functions.calcul import calcul_traj
@@ -254,52 +256,60 @@ class SatelliteSimulator(tk.Tk):
         self.mission_name = ttk.Entry(self.mission_frame)
         self.mission_name.grid(row=0, column=1, sticky="e")
 
-        self.l_misstime = ttk.Label(self.mission_frame, text="Duration of the mission (s) : ")
+        self.l_misstime = ttk.Label(self.mission_frame, text="Starting date of the mission (DD/MM/YYYY) : ")
         self.l_misstime.grid(row=1, column=0, sticky="w")
-        self.mission_time = ttk.Entry(self.mission_frame)
+        #self.mission_time = ttk.Entry(self.mission_frame)
+        self.mission_time = DateEntry(self.mission_frame, date_pattern="dd/mm/yyyy")
         self.mission_time.grid(row=1, column=1, sticky="e")
+        
 
-        self.l_timestep = ttk.Label(self.mission_frame, text="Time step of the mission (s) : ")
-        self.l_timestep.grid(row=2, column=0, sticky="w")
+        self.l_misstime_end = ttk.Label(self.mission_frame, text="Ending date of the mission ((DD/MM/YYYY)) : ")
+        self.l_misstime_end.grid(row=2, column=0, sticky="w")
+        self.mission_time_end = DateEntry(self.mission_frame, date_pattern="dd/mm/yyyy")
+        self.mission_time_end.grid(row=2, column=1, sticky="e")
+
+        self.l_timestep = ttk.Label(self.mission_frame, text="Time step of the mission : ")
+        self.l_timestep.grid(row=3, column=0, sticky="w")
         self.timestep = ttk.Entry(self.mission_frame)
-        self.timestep.grid(row=2, column=1, sticky="e")
+        self.timestep.grid(row=3, column=1, sticky="e")
+        ToolTip(self.timestep, msg="If the mission duration is less than one day, then enter the timestep in second, else in day", follow=True)
 
-        ttk.Label(self.mission_frame, text="Type : ").grid(row=3, column=0, sticky="w")
+        ttk.Label(self.mission_frame, text="Type : ").grid(row=4, column=0, sticky="w")
         self.combo_mission_type = ttk.Combobox(self.mission_frame)
-        self.combo_mission_type.grid(row=3, column=1, sticky="e")
+        self.combo_mission_type.grid(row=4, column=1, sticky="e")
         self.combo_mission_type['state'] = 'readonly'
         self.combo_mission_type.set(sat_type[0])
         self.combo_mission_type['values'] = sat_type
 
         self.l_sza = ttk.Label(self.mission_frame, text="Minimun Sun Zenith Angle (°) : ")
-        self.l_sza.grid(row=4, column=0, sticky="w")
+        self.l_sza.grid(row=5, column=0, sticky="w")
         self.minsza = ttk.Entry(self.mission_frame)
-        self.minsza.grid(row=4, column=1, sticky="e")
+        self.minsza.grid(row=5, column=1, sticky="e")
 
         self.l_combo_poi = ttk.Label(self.mission_frame, text="Poi : ")
-        self.l_combo_poi.grid(row=5, column=0, sticky="w")
+        self.l_combo_poi.grid(row=6, column=0, sticky="w")
         self.combo_poi = ttk.Combobox(self.mission_frame, postcommand= self.comb_poi_upd)
-        self.combo_poi.grid(row=5, column=1, sticky="e")
+        self.combo_poi.grid(row=6, column=1, sticky="e")
         self.combo_poi['state'] = 'readonly'
         self.combo_poi.set('Choose a POI...')
 
         self.l_combo_gs = ttk.Label(self.mission_frame, text="GS : ")
-        self.l_combo_gs.grid(row=6, column=0, sticky="w")
+        self.l_combo_gs.grid(row=7, column=0, sticky="w")
         self.combo_gs = ttk.Combobox(self.mission_frame, postcommand= self.comb_gs_upd)
-        self.combo_gs.grid(row=6, column=1, sticky="e")
+        self.combo_gs.grid(row=7, column=1, sticky="e")
         self.combo_gs['state'] = 'readonly'
         self.combo_gs.set('Choose a GS...')
 
         self.l_combo_const = ttk.Label(self.mission_frame, text="Constellation : ")
-        self.l_combo_const.grid(row=7, column=0, sticky="w")
+        self.l_combo_const.grid(row=8, column=0, sticky="w")
         self.combo_const = ttk.Combobox(self.mission_frame, postcommand= self.comb_const_upd)
-        self.combo_const.grid(row=7, column=1, sticky="e")
+        self.combo_const.grid(row=8, column=1, sticky="e")
         self.combo_const['state'] = 'readonly'
         self.combo_const.set('Choose a Constellation...')
 
-        ttk.Button(self.mission_frame, text="Add Mission", command=self.add_mission).grid(row=8, column=0, columnspan=2, pady=10)
-        ttk.Button(self.mission_frame, text="Associate", command=self.ass_gs_mission).grid(row=6, column=2, columnspan=2, pady=10)
-        ttk.Button(self.mission_frame, text="Associate", command=self.ass_poi_mission).grid(row=5, column=2, columnspan=2, pady=10)
+        ttk.Button(self.mission_frame, text="Add Mission", command=self.add_mission).grid(row=9, column=0, columnspan=2, pady=10)
+        ttk.Button(self.mission_frame, text="Associate", command=self.ass_gs_mission).grid(row=7, column=2, columnspan=2, pady=10)
+        ttk.Button(self.mission_frame, text="Associate", command=self.ass_poi_mission).grid(row=6, column=2, columnspan=2, pady=10)
 
     def tab6(self):
         # Frame for simulation control
@@ -535,16 +545,12 @@ class SatelliteSimulator(tk.Tk):
 
     def add_mission(self):
         i=0
-        if self.validate_entry(self.mission_time.get()) == False:
-            self.l_misstime.config(foreground = "red")
-            i=+1
-        else:
-            self.l_misstime.config(foreground = "green")
         if self.validate_entry(self.timestep.get()) == False:
             self.l_timestep.config(foreground = "red")
             i=+1
         else:
             self.l_timestep.config(foreground = "green")
+            
         if self.validate_entry(self.minsza.get()) == False:
             self.l_sza.config(foreground = "red")
             i=+1
@@ -573,7 +579,8 @@ class SatelliteSimulator(tk.Tk):
         if i==0:
             mission = init_mission(str(self.mission_name.get()),
                                    float(self.timestep.get()),
-                                   float(self.mission_time.get()),
+                                   self.mission_time.get_date(),
+                                   self.mission_time_end.get_date(),
                                    str(self.combo_mission_type.get()),
                                    float(self.minsza.get()),
                                    self.__poi_temp,
@@ -722,8 +729,10 @@ class SatelliteSimulator(tk.Tk):
         for i in range(len(liste_gs)):
             gs_marker = self.__map_widget.set_marker(liste_gs[i].get_coordinate()[0], liste_gs[i].get_coordinate()[1], text=liste_gs[i].get_name(), marker_color_outside=liste_gs[i].get_color())
         for i in range(len(liste_poi)):
-            poi_marker = self.__map_widget.set_marker(liste_poi[i].get_coordinate(0)[0], liste_poi[i].get_coordinate(0)[1], text=liste_poi[i].get_name(), marker_color_outside=liste_poi[i].get_color())
-        
+            if liste_poi[i].IsArea()== False:
+                poi_marker = self.__map_widget.set_marker(liste_poi[i].get_coordinate(0)[0], liste_poi[i].get_coordinate(0)[1], text=liste_poi[i].get_name(), marker_color_outside=liste_poi[i].get_color())
+            else:
+                poly = self.__map_widget.set_polygon(liste_poi[i].get_area(), outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name(), )
         if er==0:
             showinfo("Message", "Simulation parameters loaded")
         else:

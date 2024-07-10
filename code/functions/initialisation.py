@@ -45,11 +45,11 @@ def init_gs(name, long, lat, alt, ele, bw, deb, color):
     gs = Ground_station(name, lat, long, alt, ele, bw, deb, color)
     return gs
 
-def init_mission(name, ts, tf, type, sza, lst_poi, lst_gs, const, dp = False, t0 = 0 ):
+def init_mission(name, ts, ti, te, type, sza, lst_poi, lst_gs, const, dp = False):
     """
     Permet d'initialiser les missions.
     """
-    mission = Mission(name, ts, t0, tf, sza, dp, type)
+    mission = Mission(name, ts, ti, te, sza, dp, type)
     for j in range(len(liste_constellation)):
         if liste_constellation[j].get_name() == const:
             mission.add_constellation(liste_constellation[j])
@@ -57,7 +57,7 @@ def init_mission(name, ts, tf, type, sza, lst_poi, lst_gs, const, dp = False, t0
         mission.add_gs(lst_gs[i])
     for k in range(len(lst_poi)):
         mission.add_poi(lst_poi[k])
-        
+    print(mission.get_TF())
     return mission
 
 def init_sat(n, sw, dep, col, ty, orb):

@@ -1,2 +1,5 @@
-name,duration,timestep,type,minsza,poi,gs,constellation
-TEST,86400.0,100.0,EO,20.0,['Toulouse'],['Vladivostok'],Copernicus
+name,starttime,endtime,timestep,type,minsza,poi,gs,constellation
+
+TEST,2024-07-10,2024-07-10,100,EO,20.0,['Toulouse'],['Vladivostok'],Copernicus
+
+eccen,2024-07-10,2024-07-10,100.0,EO,20.0,['Toulouse'],['Vladivostok'],Test
