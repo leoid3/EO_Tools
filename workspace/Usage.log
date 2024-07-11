@@ -160,3 +160,7 @@
 2024-07-05 14:07:23,039;Capella;6.1.0.202303291413;Create+Representation;Operational+Capabilities+Blank;OK;ab088300-b1d5-42c6-a9e8-655781fabc98
 2024-07-05 14:40:04,761;Capella;6.1.0.202303291413;Open+Representation;;;
 2024-07-05 14:40:05,781;Capella;6.1.0.202303291413;Open+Representation;;OK;
+2024-07-10 17:19:36,482;Capella;6.1.0.202303291413;Transition;Function+Scenario+to+Exchange+Scenario+Initialization;;
+2024-07-10 17:19:37,380;Capella;6.1.0.202303291413;Transition;Function+Scenario+to+Exchange+Scenario+Initialization;OK;
+2024-07-10 17:20:56,373;Capella;6.1.0.202303291413;Create+Representation;Component+Exchanges+Scenario;;687c8bec-e37e-4133-b339-7da9f56142f7
+2024-07-10 17:20:56,601;Capella;6.1.0.202303291413;Create+Representation;Component+Exchanges+Scenario;OK;687c8bec-e37e-4133-b339-7da9f56142f7

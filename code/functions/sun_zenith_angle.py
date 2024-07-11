@@ -7,6 +7,9 @@ import matplotlib.dates as mdates
 from config import *
 
 def sun_zenith_angle(latitude_target, longitude_target, altitude, time_zone, name):
+    """
+    Permet de calculer le sza d'un point à une heure précise.
+    """
     
     site = Location(latitude_target, longitude_target, time_zone, altitude, name)
     time_range = pd.date_range(TI, TF, freq='h', tz=site.tz)

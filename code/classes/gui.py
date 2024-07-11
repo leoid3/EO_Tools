@@ -9,13 +9,20 @@ from functions.initialisation import init_constellation, init_poi, init_gs, init
 from functions.calcul import calcul_traj
 from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv
+from functions.country import get_country_name, get_poly_coordinate
 
 class SatelliteSimulator(tk.Tk):
     def __init__(self):
         super().__init__()
         self.marker_list=[]
+        self.marker_poi = []
         self.poly_list = []
+        self.final_poly_list = []
+        self.country_coords =[]
+        self.country_marker =[]
+        self.selected_country_coords = []
         self.flag_area = False
+        self.flag_country = False
         self.title("EO Tools")
         self.geometry("1920x1080")
 
@@ -41,7 +48,8 @@ class SatelliteSimulator(tk.Tk):
         self.__map_widget.pack()
         self.__map_widget.add_right_click_menu_command(label="Add POI", command=self.copy_coords_poi, pass_coords=True)
         self.__map_widget.add_right_click_menu_command(label="Add GS", command=self.copy_coords_gs, pass_coords=True)
-        self.__map_widget.add_right_click_menu_command(label="Add Marker", command=self.add_marker, pass_coords=True)
+        self.__map_widget.add_right_click_menu_command(label="Add Marker", command=self.add_marker_hand, pass_coords=True)
+        self.__map_widget.add_right_click_menu_command(label="Select a Country", command=self.add_marker_country, pass_coords=True)
         
 
         ttk.Button(map_frame, text="Satellite view", command=self.set_map_satellite).pack(side= "left")
@@ -459,12 +467,14 @@ class SatelliteSimulator(tk.Tk):
             i=+1
         else:
             self.l_poin.config(foreground = "green")
-
         if i==0:
             if self.flag_area==False:
                 coord = [float(self.poi_long.get()), float(self.poi_lat.get())]
+            elif self.flag_country == True:
+                coord = self.selected_country_coords
             else:
                 coord = self.marker_list
+            
             poi = init_poi(str(self.poi_name.get()),
                            coord,
                            float(self.poi_alt.get()),
@@ -473,11 +483,18 @@ class SatelliteSimulator(tk.Tk):
             liste_poi.append(poi)
             self.poi_lat.config(state="enable")
             self.poi_long.config(state="enable")
+            self.poi_name.config(state="enable")
+            for i in range(len(self.marker_poi)):
+                self.marker_poi[i].delete()
+            self.final_poly_list.append(self.poly_list[0])
             self.poly_list.clear()
             self.marker_list.clear()
+            self.selected_country_coords.clear()
+            self.country_marker.clear()
             if self.flag_area==False:
                 poi_marker = self.__map_widget.set_marker(poi.get_coordinate(0)[0], poi.get_coordinate(0)[1], text=poi.get_name(), marker_color_outside=poi.get_color())
             self.flag_area=False
+            self.flag_country = False
             showinfo("Message", "POI ajouté avec succès")
         else:
             showinfo("Error", "Un ou plusieurs parametres sont manquants")
@@ -592,10 +609,33 @@ class SatelliteSimulator(tk.Tk):
             showinfo("Error", "Un ou plusieurs parametre sont manquants")
 
     def area_by_country(self):
-        self.poi_lat.config(state="disable")
-        self.poi_long.config(state="disable")
-        return
-
+        if len(self.poly_list)==0:
+            country_name = get_country_name(self.country_coords)
+            if country_name is None:
+                showinfo("Error", "You must select a valid country")
+            else:
+                self.poi_name.insert(0, country_name)
+                self.poi_name.config(state="disable")
+                self.poi_lat.config(state="disable")
+                self.poi_long.config(state="disable")
+                print(country_name)
+                coords = get_poly_coordinate(country_name)
+                correct_coords =[]    
+                for i in range(len(coords)):
+                    for k in range(len(coords[i])):
+                        temp = coords[i][k]
+                        lat = temp[0]
+                        long = temp[1]
+                        correct_coords.append((long, lat))
+                poly = self.__map_widget.set_polygon(correct_coords, outline_color="red", fill_color="green", name=country_name)
+                self.selected_country_coords = correct_coords
+                self.poly_list.append(poly)
+                self.flag_area = True
+                self.flag_country = True
+                self.flag_marker = False
+        else:
+            showinfo("Error", "Area already created")  
+        
     def area_by_hand(self):
         if len(self.poly_list)==0:
             self.poi_lat.config(state="disable")
@@ -604,6 +644,7 @@ class SatelliteSimulator(tk.Tk):
             poly = self.__map_widget.set_polygon(self.marker_list, outline_color="blue", fill_color="green", name=poly_name)
             self.poly_list.append(poly)   
             self.flag_area = True
+            
         else:
             showinfo("Error", "Area already created")  
         return
@@ -616,11 +657,22 @@ class SatelliteSimulator(tk.Tk):
         self.gs_lat.insert(0, coord[0])
         self.gs_long.insert(0, coord[1])
 
-    def add_marker(self, coords):
+    def add_marker_hand(self, coords):
         marker_name = f"{len(self.marker_list)+1}"
         marker = self.__map_widget.set_marker(coords[0], coords[1], text=marker_name)
+        self.marker_poi.append(marker)
         self.marker_list.append(marker.position)
 
+    def add_marker_country(self, coords):
+        if len(self.country_marker)!=0:
+            self.country_marker[0].delete()
+            self.country_marker.clear()
+            self.country_coords.clear()
+        marker= self.__map_widget.set_marker(coords[0], coords[1], text="Country")
+        self.country_marker.append(marker)
+        lat, long = marker.position
+        self.country_coords.append((lat, long))
+        
     def validate_entry(self, entry):
         if len(entry) == 0:
             return False
@@ -700,13 +752,11 @@ class SatelliteSimulator(tk.Tk):
 
     def run_simulation(self):
         if (len(liste_mission) == 0) or (str(self.combo_mission.get())=='Aucun') or(str(self.combo_mission.get())=='Choose a Mission'):
-            showinfo("Error", "You need to create a mission to continue")
+            showinfo("Error", "You need to select a mission to continue")
         else:
             for i in range(len(liste_mission)):
                 if liste_mission[i].get_name()==str(self.combo_mission.get()):
                     calcul_traj(liste_mission[i], self.__map_widget)
-            #self.canvas2d.draw()
-            #self.canvas3d.draw()
             showinfo("Message", "Simulation simulated correctly")
                               
     def reset(self):
@@ -725,6 +775,7 @@ class SatelliteSimulator(tk.Tk):
             showinfo('Message', 'Simulation parameters saved')
 
     def load_simulation(self):
+        self.reset()
         er = import_from_csv()
         for i in range(len(liste_gs)):
             gs_marker = self.__map_widget.set_marker(liste_gs[i].get_coordinate()[0], liste_gs[i].get_coordinate()[1], text=liste_gs[i].get_name(), marker_color_outside=liste_gs[i].get_color())

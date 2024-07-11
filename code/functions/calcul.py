@@ -10,6 +10,9 @@ from functions.ground_track import plot_ground_track, show_gs_on_ground_track, s
 
 
 def calcul_traj(mission, map):
+    """
+    Permet de calculer l'obite et de l'afficher.
+    """
     const = mission.get_constellation()
     temp_sat = const.get_model()
     temp_orbit = temp_sat.get_orbit()

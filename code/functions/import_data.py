@@ -5,6 +5,9 @@ from config import *
 from functions.initialisation import init_poi, init_gs, init_orb, init_sat, init_constellation, init_mission, reset_liste
 
 def import_from_csv():
+    """
+    Permet d'importer les données de simulation depuis un fichier .csv.
+    """
     reset_liste()
     er=0
     #POI

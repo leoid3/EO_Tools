@@ -61,14 +61,23 @@ def init_mission(name, ts, ti, te, type, sza, lst_poi, lst_gs, const, dp = False
     return mission
 
 def init_sat(n, sw, dep, col, ty, orb):
+    """
+    Permet d'initialiser les satellites.
+    """
     sat = Satellite(n, sw, dep, col, ty, orb)
     return sat
 
 def init_orb(h, e, i, Ω, ω, ν):
+    """
+    Permet d'initialiser les orbites.
+    """
     orb = Orbit(h, e, i, Ω, ω, ν)
     return orb
 
 def reset_liste():
+    """
+    Permet de réinitialiser les données.
+    """
     liste_satellite.clear()
     liste_constellation.clear()
     liste_gs.clear()

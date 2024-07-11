@@ -1,4 +1,5 @@
 name,starttime,endtime,timestep,type,minsza,poi,gs,constellation
 
-eccen,2024-07-10,2024-07-10,100.0,EO,20.0,['France'],['EE'],Test
+TEST,2024-07-10,2024-07-10,100,EO,20.0,['Toulouse'],['Vladivostok'],Copernicus
 
+eccen,2024-07-10,2024-07-10,100.0,EO,20.0,['Toulouse'],['Vladivostok'],Test

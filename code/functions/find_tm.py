@@ -5,6 +5,9 @@ import datetime
 from config import *
 
 def findtimezone(coord):
+    """
+    Permet de trouver la timezone liée a la latitude et longitude.
+    """
     tf = tz.TimezoneFinder()
     timezone_str = tf.certain_timezone_at(lat = coord[1], lng =coord[0])
     if timezone_str is None:
@@ -23,6 +26,9 @@ def findtimezone(coord):
     return tm
 
 def centroid(coord):
+    """
+    Permet de trouver le centre d'un polygone.
+    """
     vertices = []
     for i in range(len(coord)):
         lat = coord[i][0]

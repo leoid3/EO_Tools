@@ -58,9 +58,15 @@ def plot_ground_track(sat, times, ax, color, map):
     ax.legend()
 
 def show_gs_on_ground_track(gs, ax):
+    """
+    Permet de d'afficher les GS.
+    """
     ax.plot(gs.get_coordinate()[1], gs.get_coordinate()[0], 'o', label=gs.get_name(), color=gs.get_color())
     ax.legend()
 
 def show_poi_on_ground_track(poi, ax):
+    """
+    Permet d'afficher les POI'.
+    """
     ax.plot(poi.get_coordinate(0)[1], poi.get_coordinate(0)[0], 'x', label=poi.get_name(), color=poi.get_color())
     ax.legend()
