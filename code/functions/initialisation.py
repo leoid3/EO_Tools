@@ -33,7 +33,14 @@ def init_poi(name, coord, alt, color, area):
         poi.set_coordinate(coord[1], coord[0])
     else:
         for i in range(len(coord)):
-            poi.set_coordinate(coord[i][0], coord[i][1])
+            if len(coord[i])>2:
+                for j in range(len(coord[i])):
+                    temp = coord[i][j]
+                    lat = temp[0]
+                    long = temp[1]
+                    poi.set_coordinate(lat, long)
+            else:
+                poi.set_coordinate(coord[i][0], coord[i][1])
     #poi.set_sza(sun_zenith_angle(poi.get_coordinate(0)[0], poi.get_coordinate(0)[1], poi.get_altitude(), poi.get_timezone(), poi.get_name()))
     #print(poi.get_sza())
     return poi

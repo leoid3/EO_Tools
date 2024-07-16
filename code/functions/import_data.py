@@ -30,12 +30,19 @@ def import_from_csv():
                             if j==0:
                                 lat = coord[0]
                                 long = coord[1]
-                                coordinate.append((float(lat[2:]), float(long[:-1])))
-                                
+                                try:
+                                    float(lat[2:])
+                                    coordinate.append((float(lat[2:]), float(long[:-1])))
+                                except ValueError:
+                                    coordinate.append((float(lat[3:]), float(long[:-1]))) 
                             elif j== len(coord)-2:
                                 lat = coord[j]
                                 long= coord[j+1]
-                                coordinate.append((float(lat[1:]), float(long[:-2])))
+                                try:
+                                    float(long[:-2])
+                                    coordinate.append((float(lat[1:]), float(long[:-2])))
+                                except ValueError:
+                                    coordinate.append((float(lat[1:]), float(long[:-3])))
                             elif j%2==0:
                                 lat = coord[j]
                                 long = coord[j+1]

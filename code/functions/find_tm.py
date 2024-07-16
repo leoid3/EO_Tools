@@ -31,10 +31,15 @@ def centroid(coord):
     """
     vertices = []
     for i in range(len(coord)):
-        for j in range(len(coord[i])):
-            temp = coord[i][j]
-            lat = temp[0]
-            long = temp[1]
+        if len(coord[i])>2:
+            for j in range(len(coord[i])):
+                temp = coord[i][j]
+                lat = temp[0]
+                long = temp[1]
+                vertices.append((long, lat))
+        else:
+            lat = coord[i][0]
+            long = coord[i][1]
             vertices.append((long, lat))
     x, y = 0, 0
     n = len(vertices)

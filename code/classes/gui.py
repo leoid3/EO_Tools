@@ -917,6 +917,19 @@ class SatelliteSimulator(tk.Tk):
         self.__map_widget.delete_all_polygon()
         self.set_map_default()
         reset_liste()
+        self.flag_area = False
+        self.flag_country = False
+        self.flag_mod_sat = False
+        self.flag_mod_const = False
+        self.flag_mod_gs = False
+        self.flag_mod_poi = False
+        self.marker_list=[]
+        self.marker_poi = []
+        self.poly_list = []
+        self.final_poly_list = []
+        self.country_coords =[]
+        self.country_marker =[]
+        self.selected_country_coords = []
         showinfo("Message", "Simulation reseted")
 
     def save_simulation(self):
