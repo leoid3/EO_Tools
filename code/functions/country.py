@@ -12,11 +12,12 @@ def get_country_name(coords):
         location = geolocator.reverse((lat, lon), language='en')
         address = location.raw['address']
         country = address.get('country', '')
-        return country
+        state = address.get('state' '')
+        return country, state
     except AttributeError:
         return None
 
-def get_poly_coordinate(country_name):
+def get_poly_coordinate(country_name, state_name):
     """
     Permet de recuperer les latitudes et longitudes qui composent les frontière d'un pays.
     """
@@ -28,9 +29,16 @@ def get_poly_coordinate(country_name):
         raise KeyError("La colonne du nom du pays n'est pas trouvée dans le DataFrame")
     
     final_coords =[]
-    country = world[world[country_column] == country_name]
+    poly_coord = []
+    country = world[world[country_column] == state_name]
     if not country.empty:
+        name = state_name
+    else:
+        country = world[world[country_column] == country_name]
+        name = country_name
     # Vérifie si la géométrie est un MultiPolygon ou un Polygon
+
+    if not country.empty:
         geom = country.geometry.iloc[0]
         if geom.type == 'Polygon':
             country_boundary_coords = geom.exterior.coords[:]
@@ -43,9 +51,10 @@ def get_poly_coordinate(country_name):
             for polygon in geom.geoms:
                 country_boundary_coords = polygon.exterior.coords[:]
                 final_coords.append(country_boundary_coords)
+                poly_coord.append(final_coords)
                 for coord in country_boundary_coords:
                     print(coord)
     else:
         print(f"Les données pour {country_name} n'ont pas été trouvées.")
-    return final_coords
+    return final_coords, name
     

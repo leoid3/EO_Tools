@@ -16,12 +16,12 @@ liste_constellation = []
 liste_mission = []
 
 #sources maps
-satellite_map = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+satellite_map = "https://mt1.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
 normal_map ="https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga"
 
 #Dataset
-folder = Path("dataset/")
-path_to_shapefile = folder / "ne_110m_admin_0_map_units.shp"
+folder = Path("dataset/50/")
+path_to_shapefile = folder / "ne_50m_admin_0_map_units.shp"
 world = gpd.read_file(path_to_shapefile)
 
 #Definition de l'exportation
