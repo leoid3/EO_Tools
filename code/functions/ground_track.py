@@ -1,5 +1,6 @@
 import numpy as np
 from functions.eci_to_ecef import eci_to_ecef
+from functions.find_tm import centroid
 from config import *
 
 def plot_ground_track(sat, times, ax, color, map):
@@ -37,8 +38,7 @@ def plot_ground_track(sat, times, ax, color, map):
             marker_list=[]
             segment_lats = []
             segment_lons = []
-            
-        
+              
     segment_lats.append(lats[-1])
     segment_lons.append(lons[-1])
     segments.append((segment_lats, segment_lons))
@@ -68,5 +68,10 @@ def show_poi_on_ground_track(poi, ax):
     """
     Permet d'afficher les POI'.
     """
-    ax.plot(poi.get_coordinate(0)[1], poi.get_coordinate(0)[0], 'x', label=poi.get_name(), color=poi.get_color())
-    ax.legend()
+    if poi.IsArea()==False:
+        ax.plot(poi.get_coordinate(0)[1], poi.get_coordinate(0)[0], 'x', label=poi.get_name(), color=poi.get_color())
+        ax.legend()
+    else:
+        x, y = centroid(poi.get_area())
+        ax.plot(x, y, 'x', label=poi.get_name(), color=poi.get_color())
+        ax.legend()

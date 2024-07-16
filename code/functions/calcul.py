@@ -80,3 +80,25 @@ def calcul_traj(mission, map):
     for i in range(mission.get_nb_gs()):
         show_gs_on_ground_track(mission.get_gs(i), ax_2D)
     plt.show()
+
+def kepler_equation(E, M, e):
+    return E - e * np.sin(E) - M
+
+def kepler_equation_prime(E, e):
+    return 1 - e * np.cos(E)
+
+def solve_kepler(M, e, tol=1e-6, max_iter=1000):
+    E = M if e < 0.8 else np.pi
+    for _ in range(max_iter):
+        f = kepler_equation(E, M, e)
+        f_prime = kepler_equation_prime(E, e)
+        E_new = E - f / f_prime
+        if abs(E_new - E) < tol:
+            return E_new
+        E = E_new
+    raise RuntimeError("La méthode de Newton-Raphson n'a pas convergé")
+
+def true_anomaly(M, e):
+    E = solve_kepler(M, e)
+    nu = 2 * np.arctan2(np.sqrt(1 + e) * np.sin(E / 2), np.sqrt(1 - e) * np.cos(E / 2))
+    return nu

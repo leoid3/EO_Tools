@@ -4,12 +4,14 @@ from tkinter.messagebox import showinfo
 from tktooltip import ToolTip
 import tkintermapview as tkmap
 from tkcalendar import DateEntry
+import numpy as np
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
-from functions.calcul import calcul_traj
+from functions.calcul import calcul_traj, true_anomaly
 from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv
 from functions.country import get_country_name, get_poly_coordinate
+from satellite_tle import fetch_tle_from_celestrak
 
 class SatelliteSimulator(tk.Tk):
     def __init__(self):
@@ -57,7 +59,7 @@ class SatelliteSimulator(tk.Tk):
         
 
         ttk.Button(map_frame, text="Satellite view", command=self.set_map_satellite).pack(side= "left")
-        ttk.Button(map_frame, text="Normal view", command=self.set_map_default).pack(side="left")
+        ttk.Button(map_frame, text="Map view", command=self.set_map_default).pack(side="left")
 
     def set_map_satellite(self):
         self.__map_widget.set_tile_server(satellite_map, max_zoom=20)
@@ -135,6 +137,7 @@ class SatelliteSimulator(tk.Tk):
         ttk.Button(sat_frame, text="Add Satellite", command=self.add_satellite).grid(row=12, column=2, pady=10)
         ttk.Button(sat_frame, text="Modify Satellite", command=self.modify_satellite).grid(row=12, column=1, pady=10)
         ttk.Button(sat_frame, text="Delete Satellite", command=self.add_satellite).grid(row=12, column=0, pady=10)
+        ttk.Button(sat_frame, text="Import TLE", command=self.openTLEwindow).grid(row=13, column=1, pady=10)
 
     def tab2(self):
         const_frame = ttk.LabelFrame(self.main_frame, text="Constellation Creation :", padding=(10, 10))
@@ -458,6 +461,31 @@ class SatelliteSimulator(tk.Tk):
         showinfo('Message', 'Done, to confirm the change, re-click on "Modify Satellite"')
         self.flag_mod_sat = True
 
+    def openTLEwindow(self):
+        window = FetchTLEWindow(self.fetchTLEdata)
+
+    def fetchTLEdata(self, noradID):
+        tle=fetch_tle_from_celestrak(noradID)
+        showinfo('Message', f"{tle[0]} has been found !")
+        self.sat_name.delete(0, tk.END)
+        self.sat_name.insert(0, tle[0])
+        orbital_data = tle[2].split()
+        self.inclination.delete(0, tk.END)
+        self.inclination.insert(0, orbital_data[2])
+        self.raan.delete(0, tk.END)
+        self.raan.insert(0, orbital_data[3])
+        self.eccentricity.delete(0, tk.END)
+        self.eccentricity.insert(0, "0."+orbital_data[4])
+        self.arg_perigee.delete(0, tk.END)
+        self.arg_perigee.insert(0, orbital_data[5])
+        
+        a=((mu**(1/3))/(((2*float(orbital_data[7])*np.pi)/86400)**(2/3)) - earth_radius)/1000
+        self.altitude.delete(0, tk.END)
+        self.altitude.insert(0, a)
+        self.true_anomaly.delete(0, tk.END)
+        ta = true_anomaly(float(orbital_data[6]), float("0."+orbital_data[4]) )
+        self.true_anomaly.insert(0, ta)
+        
     def add_constellation(self):
         i=0
         if self.validate_entry(self.walkerP.get()) == False:
@@ -1082,3 +1110,25 @@ class ModifyPOIWindow:
         else: 
             self.showpoiinfo(self.combo_poi.get())
             self.top.destroy()
+
+class FetchTLEWindow:
+    def __init__(self, fetchtle):
+        self.top = tk.Toplevel()
+        self.frame = tk.Frame(self.top)
+        self.frame.pack(expand=True, fill='both', padx=10, pady=10)
+        self.fetchtle = fetchtle
+
+        self.l_noradID =ttk.Label(self.frame, text="Enter the NORAD ID of the satellite : ")
+        self.l_noradID.grid(row=0, column=0, sticky="w")
+        self.noradID = ttk.Entry(self.frame)
+        self.noradID.grid(row=0, column=1, sticky="e")
+
+        ttk.Button(self.frame, text="Search", command=self.submit).grid(row=1, column=1, pady=10)
+    
+    def submit(self):
+        try:
+            float(self.noradID.get())
+            self.fetchtle(float(self.noradID.get()))
+            self.top.destroy()
+        except ValueError:
+            showinfo("Error", "You need to enter a correct NORAD ID !!!")
