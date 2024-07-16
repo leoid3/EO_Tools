@@ -465,26 +465,30 @@ class SatelliteSimulator(tk.Tk):
         window = FetchTLEWindow(self.fetchTLEdata)
 
     def fetchTLEdata(self, noradID):
-        tle=fetch_tle_from_celestrak(noradID)
-        showinfo('Message', f"{tle[0]} has been found !")
-        self.sat_name.delete(0, tk.END)
-        self.sat_name.insert(0, tle[0])
-        orbital_data = tle[2].split()
-        self.inclination.delete(0, tk.END)
-        self.inclination.insert(0, orbital_data[2])
-        self.raan.delete(0, tk.END)
-        self.raan.insert(0, orbital_data[3])
-        self.eccentricity.delete(0, tk.END)
-        self.eccentricity.insert(0, "0."+orbital_data[4])
-        self.arg_perigee.delete(0, tk.END)
-        self.arg_perigee.insert(0, orbital_data[5])
+        try:
+
+            tle=fetch_tle_from_celestrak(noradID)
+            showinfo('Message', f"{tle[0]} has been found !")
+            self.sat_name.delete(0, tk.END)
+            self.sat_name.insert(0, tle[0])
+            orbital_data = tle[2].split()
+            self.inclination.delete(0, tk.END)
+            self.inclination.insert(0, orbital_data[2])
+            self.raan.delete(0, tk.END)
+            self.raan.insert(0, orbital_data[3])
+            self.eccentricity.delete(0, tk.END)
+            self.eccentricity.insert(0, "0."+orbital_data[4])
+            self.arg_perigee.delete(0, tk.END)
+            self.arg_perigee.insert(0, orbital_data[5])
         
-        a=((mu**(1/3))/(((2*float(orbital_data[7])*np.pi)/86400)**(2/3)) - earth_radius)/1000
-        self.altitude.delete(0, tk.END)
-        self.altitude.insert(0, a)
-        self.true_anomaly.delete(0, tk.END)
-        ta = true_anomaly(float(orbital_data[6]), float("0."+orbital_data[4]) )
-        self.true_anomaly.insert(0, ta)
+            a=((mu**(1/3))/(((2*float(orbital_data[7])*np.pi)/86400)**(2/3)) - earth_radius)/1000
+            self.altitude.delete(0, tk.END)
+            self.altitude.insert(0, a)
+            self.true_anomaly.delete(0, tk.END)
+            ta = true_anomaly(float(orbital_data[6]), float("0."+orbital_data[4]) )
+            self.true_anomaly.insert(0, ta)
+        except IndexError:
+            showinfo("Error", "The NORAD ID does not correspond to any existing satellite")
         
     def add_constellation(self):
         i=0
