@@ -13,6 +13,9 @@ from functions.import_data import import_from_csv
 from functions.country import get_country_name, get_poly_coordinate
 from satellite_tle import fetch_tle_from_celestrak
 
+#############################################################################################
+# Main window
+
 class SatelliteSimulator(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -31,6 +34,8 @@ class SatelliteSimulator(tk.Tk):
         self.flag_mod_poi = False
         self.title("EO Tools")
         self.geometry("1920x1080")
+
+        
 
         self.main_frame = ttk.Frame(self)
         self.main_frame.pack(expand=True, fill='both', padx=10, pady=10)
@@ -60,7 +65,13 @@ class SatelliteSimulator(tk.Tk):
 
         ttk.Button(map_frame, text="Satellite view", command=self.set_map_satellite).pack(side= "left")
         ttk.Button(map_frame, text="Map view", command=self.set_map_default).pack(side="left")
-
+        self.forward = ttk.Button(map_frame, text=">", command=self.stepforward)
+        self.forward.pack(side= "right")
+        self.backward = ttk.Button(map_frame, text="<", command=self.stepbackward)
+        self.backward.pack(after= self.forward, side= "right")
+        self.forward.config(state="disable")
+        self.backward.config(state="disable")
+        
     def set_map_satellite(self):
         self.__map_widget.set_tile_server(satellite_map, max_zoom=20)
     
@@ -69,201 +80,202 @@ class SatelliteSimulator(tk.Tk):
 
     def tab1(self):
         # Frame for the satellite tab
-        sat_frame = ttk.LabelFrame(self.main_frame, text="Satellite Creation :", padding=(10, 10))
-        sat_frame.place(relx= 0.1, rely=0, anchor= "n")
+        self.sat_frame = ttk.LabelFrame(self.main_frame, text="Satellite Creation :", padding=(10, 10))
+        self.sat_frame.place(relx= 0.1, rely=0, anchor= "n")
 
-        self.l_sn = ttk.Label(sat_frame, text="Name of the Satellite : ")
+        self.l_sn = ttk.Label(self.sat_frame, text="Name of the Satellite : ")
         self.l_sn.grid(row=0, column=0, sticky="w")
-        self.sat_name = ttk.Entry(sat_frame)
+        self.sat_name = ttk.Entry(self.sat_frame)
         self.sat_name.grid(row=0, column=1, sticky="e")
 
-        self.l_sw = ttk.Label(sat_frame, text="Swath (km) : ")
+        self.l_sw = ttk.Label(self.sat_frame, text="Swath (km) : ")
         self.l_sw.grid(row=1, column=0, sticky="w")
-        self.sat_swath = ttk.Entry(sat_frame)
+        self.sat_swath = ttk.Entry(self.sat_frame)
         self.sat_swath.grid(row=1, column=1, sticky="e")
 
-        self.l_dep = ttk.Label(sat_frame, text="Depointing (°) : ")
+        self.l_dep = ttk.Label(self.sat_frame, text="Depointing (°) : ")
         self.l_dep.grid(row=2, column=0, sticky="w")
-        self.sat_dep = ttk.Entry(sat_frame)
+        self.sat_dep = ttk.Entry(self.sat_frame)
         self.sat_dep.grid(row=2, column=1, sticky="e")
 
-        ttk.Label(sat_frame, text="Color : ").grid(row=3, column=0, sticky="w")
-        self.combo_color = ttk.Combobox(sat_frame)
+        ttk.Label(self.sat_frame, text="Color : ").grid(row=3, column=0, sticky="w")
+        self.combo_color = ttk.Combobox(self.sat_frame)
         self.combo_color.grid(row=3, column=1, sticky="e")
         self.combo_color['state'] = 'readonly'
         self.combo_color.set(list_colors[0])
         self.combo_color['values'] = list_colors
         
 
-        ttk.Label(sat_frame, text="Type : ").grid(row=4, column=0, sticky="w")
-        self.combo_type = ttk.Combobox(sat_frame)
+        ttk.Label(self.sat_frame, text="Type : ").grid(row=4, column=0, sticky="w")
+        self.combo_type = ttk.Combobox(self.sat_frame)
         self.combo_type.grid(row=4, column=1, sticky="e")
         self.combo_type['state'] = 'readonly'
         self.combo_type.set(sat_type[0])
         self.combo_type['values'] = sat_type
 
         # Frame for the orbit
-        ttk.Label(sat_frame, text='Orbit Creation :').grid(row=5, column=0, padx=10, pady=10, sticky="nw")
-        self.l_a =ttk.Label(sat_frame, text="Altitude (km):")
+        ttk.Label(self.sat_frame, text='Orbit Creation :').grid(row=5, column=0, padx=10, pady=10, sticky="nw")
+        self.l_a =ttk.Label(self.sat_frame, text="Altitude (km):")
         self.l_a.grid(row=6, column=0, sticky="w")
-        self.altitude = ttk.Entry(sat_frame)
+        self.altitude = ttk.Entry(self.sat_frame)
         self.altitude.grid(row=6, column=1, sticky="e")
 
-        self.l_e = ttk.Label(sat_frame, text="Eccentricity:")
+        self.l_e = ttk.Label(self.sat_frame, text="Eccentricity:")
         self.l_e.grid(row=7, column=0, sticky="w")
-        self.eccentricity = ttk.Entry(sat_frame)
+        self.eccentricity = ttk.Entry(self.sat_frame)
         self.eccentricity.grid(row=7, column=1, sticky="e")
 
-        self.l_i = ttk.Label(sat_frame, text="Inclination (°):")
+        self.l_i = ttk.Label(self.sat_frame, text="Inclination (°):")
         self.l_i.grid(row=8, column=0, sticky="w")
-        self.inclination = ttk.Entry(sat_frame)
+        self.inclination = ttk.Entry(self.sat_frame)
         self.inclination.grid(row=8, column=1, sticky="e")
 
-        self.l_raan = ttk.Label(sat_frame, text="RAAN (°):")
+        self.l_raan = ttk.Label(self.sat_frame, text="RAAN (°):")
         self.l_raan.grid(row=9, column=0, sticky="w")
-        self.raan = ttk.Entry(sat_frame)
+        self.raan = ttk.Entry(self.sat_frame)
         self.raan.grid(row=9, column=1, sticky="e")
 
-        self.l_ap = ttk.Label(sat_frame, text="Argument of Perigee (°):")
+        self.l_ap = ttk.Label(self.sat_frame, text="Argument of Perigee (°):")
         self.l_ap.grid(row=10, column=0, sticky="w")
-        self.arg_perigee = ttk.Entry(sat_frame)
+        self.arg_perigee = ttk.Entry(self.sat_frame)
         self.arg_perigee.grid(row=10, column=1, sticky="e")
 
-        self.l_ta = ttk.Label(sat_frame, text="True Anomaly (°):")
+        self.l_ta = ttk.Label(self.sat_frame, text="True Anomaly (°):")
         self.l_ta.grid(row=11, column=0, sticky="w")
-        self.true_anomaly = ttk.Entry(sat_frame)
+        self.true_anomaly = ttk.Entry(self.sat_frame)
         self.true_anomaly.grid(row=11, column=1, sticky="e")
 
-        ttk.Button(sat_frame, text="Add Satellite", command=self.add_satellite).grid(row=12, column=2, pady=10)
-        ttk.Button(sat_frame, text="Modify Satellite", command=self.modify_satellite).grid(row=12, column=1, pady=10)
-        ttk.Button(sat_frame, text="Delete Satellite", command=self.add_satellite).grid(row=12, column=0, pady=10)
-        ttk.Button(sat_frame, text="Import TLE", command=self.openTLEwindow).grid(row=13, column=1, pady=10)
+        ttk.Button(self.sat_frame, text="Add Satellite", command=self.add_satellite).grid(row=12, column=2, pady=10)
+        ttk.Button(self.sat_frame, text="Modify Satellite", command=self.modify_satellite).grid(row=12, column=1, pady=10)
+        ttk.Button(self.sat_frame, text="Delete Satellite", command=self.add_satellite).grid(row=12, column=0, pady=10)
+        ttk.Button(self.sat_frame, text="Import TLE", command=self.openTLEwindow).grid(row=13, column=1, pady=10)
 
     def tab2(self):
-        const_frame = ttk.LabelFrame(self.main_frame, text="Constellation Creation :", padding=(10, 10))
-        const_frame.place(relx= 0.117, rely=0.45, anchor= "n")
+        self.const_frame = ttk.LabelFrame(self.main_frame, text="Constellation Creation :", padding=(10, 10))
+        self.const_frame.place(relx= 0.117, rely=0.45, anchor= "n")
 
-        self.l_consn = ttk.Label(const_frame, text="Name of the Constellation : ")
+        self.l_consn = ttk.Label(self.const_frame, text="Name of the Constellation : ")
         self.l_consn.grid(row=0, column=0, sticky="w")
-        self.const_name = ttk.Entry(const_frame)
+        self.const_name = ttk.Entry(self.const_frame)
         self.const_name.grid(row=0, column=1, sticky="e")
 
-        ttk.Label(const_frame, text="Walker Constellation Parameters : ").grid(row=1, column=0, sticky="w")
-        self.l_walkerT = ttk.Label(const_frame, text="Number of total Satellite : ")
+        ttk.Label(self.const_frame, text="Walker Constellation Parameters : ").grid(row=1, column=0, sticky="w")
+        self.l_walkerT = ttk.Label(self.const_frame, text="Number of total Satellite : ")
         self.l_walkerT.grid(row=2, column=0, sticky="w")
-        self.walkerT = ttk.Entry(const_frame)
+        self.walkerT = ttk.Entry(self.const_frame)
         self.walkerT.grid(row=2, column=1, sticky="e")
 
-        self.l_walkerP = ttk.Label(const_frame, text="Number of orbital plane : ")
+        self.l_walkerP = ttk.Label(self.const_frame, text="Number of orbital plane : ")
         self.l_walkerP.grid(row=3, column=0, sticky="w")
-        self.walkerP = ttk.Entry(const_frame)
+        self.walkerP = ttk.Entry(self.const_frame)
         self.walkerP.grid(row=3, column=1, sticky="e")
 
-        self.l_walkerF = ttk.Label(const_frame, text="Phasing factor : ")
+        self.l_walkerF = ttk.Label(self.const_frame, text="Phasing factor : ")
         self.l_walkerF.grid(row=4, column=0, sticky="w")
-        self.walkerF = ttk.Entry(const_frame)
+        self.walkerF = ttk.Entry(self.const_frame)
         self.walkerF.grid(row=4, column=1, sticky="e")
 
-        self.l_combo_sat =ttk.Label(const_frame, text="Choose a Satellite's model : ")
+        self.l_combo_sat =ttk.Label(self.const_frame, text="Choose a Satellite's model : ")
         self.l_combo_sat.grid(row=5, column=0, sticky="w")
-        self.combo_sat = ttk.Combobox(const_frame, postcommand= self.comb_sat_upd)
+        self.combo_sat = ttk.Combobox(self.const_frame, postcommand= self.comb_sat_upd)
         self.combo_sat.grid(row=5, column=1, sticky="e")
         self.combo_sat['state'] = 'readonly'
         self.combo_sat.set('Choose a model...')
 
-        ttk.Label(const_frame, text="Color : ").grid(row=6, column=0, sticky="w")
-        self.combo_color_const = ttk.Combobox(const_frame)
+        ttk.Label(self.const_frame, text="Color : ").grid(row=6, column=0, sticky="w")
+        self.combo_color_const = ttk.Combobox(self.const_frame)
         self.combo_color_const.grid(row=6, column=1, sticky="e")
         self.combo_color_const['state'] = 'readonly'
         self.combo_color_const.set(list_colors[0])
         self.combo_color_const['values'] = list_colors
 
-        ttk.Button(const_frame, text="Add Constellation", command=self.add_constellation).grid(row=7, column=2, pady=10)
-        ttk.Button(const_frame, text="Modify Constellation", command=self.modify_constellation).grid(row=7, column=1, pady=10)
-        ttk.Button(const_frame, text="Delete Constellation", command=self.add_constellation).grid(row=7, column=0, pady=10)
+        ttk.Button(self.const_frame, text="Add Constellation", command=self.add_constellation).grid(row=7, column=2, pady=10)
+        ttk.Button(self.const_frame, text="Modify Constellation", command=self.modify_constellation).grid(row=7, column=1, pady=10)
+        ttk.Button(self.const_frame, text="Delete Constellation", command=self.add_constellation).grid(row=7, column=0, pady=10)
 
     def tab3(self):
-        poi_frame = ttk.LabelFrame(self.main_frame, text="Point of Interest Creation :", padding=(10, 10))
-        poi_frame.place(relx= 0.73, rely=0)
+        self.poi_frame = ttk.LabelFrame(self.main_frame, text="Point of Interest Creation :", padding=(10, 10))
+        self.poi_frame.place(relx= 0.73, rely=0)
 
-        self.l_poin = ttk.Label(poi_frame, text="Name of the POI : ")
+        self.l_poin = ttk.Label(self.poi_frame, text="Name of the POI : ")
         self.l_poin.grid(row=0, column=0, sticky="w")
-        self.poi_name = ttk.Entry(poi_frame)
+        self.poi_name = ttk.Entry(self.poi_frame)
         self.poi_name.grid(row=0, column=1, sticky="e")
 
-        self.l_lat = ttk.Label(poi_frame, text="Latitude (DD) : ")
+        self.l_lat = ttk.Label(self.poi_frame, text="Latitude (DD) : ")
         self.l_lat.grid(row=1, column=0, sticky="w")
-        self.poi_lat = ttk.Entry(poi_frame)
+        self.poi_lat = ttk.Entry(self.poi_frame)
         self.poi_lat.grid(row=1, column=1, sticky="e")
 
-        self.l_long = ttk.Label(poi_frame, text="Longitude (DD) : ")
+        self.l_long = ttk.Label(self.poi_frame, text="Longitude (DD) : ")
         self.l_long.grid(row=2, column=0, sticky="w")
-        self.poi_long = ttk.Entry(poi_frame)
+        self.poi_long = ttk.Entry(self.poi_frame)
         self.poi_long.grid(row=2, column=1, sticky="e")
 
-        self.l_alt = ttk.Label(poi_frame, text="Altitude (m) : ")
+        self.l_alt = ttk.Label(self.poi_frame, text="Altitude (m) : ")
         self.l_alt.grid(row=3, column=0, sticky="w")
-        self.poi_alt = ttk.Entry(poi_frame)
+        self.poi_alt = ttk.Entry(self.poi_frame)
         self.poi_alt.grid(row=3, column=1, sticky="e")
 
-        ttk.Label(poi_frame, text="Color : ").grid(row=4, column=0, sticky="w")
-        self.combo_color_poi = ttk.Combobox(poi_frame)
+        ttk.Label(self.poi_frame, text="Color : ").grid(row=4, column=0, sticky="w")
+        self.combo_color_poi = ttk.Combobox(self.poi_frame)
         self.combo_color_poi.grid(row=4, column=1, sticky="e")
         self.combo_color_poi['state'] = 'readonly'
         self.combo_color_poi.set(list_colors[0])
         self.combo_color_poi['values'] = list_colors
 
-        ttk.Button(poi_frame, text="Select Countries", command=self.area_by_country).grid(row=5, column=0, pady=10)
-        ttk.Button(poi_frame, text="Draw area", command=self.area_by_hand).grid(row=5, column=1, pady=10)
-        ttk.Button(poi_frame, text="Add POI", command=self.add_poi).grid(row=6, column=2, pady=10)
-        ttk.Button(poi_frame, text="Modify POI", command=self.modify_poi).grid(row=6, column=1, pady=10)
-        ttk.Button(poi_frame, text="Delete POI", command=self.add_poi).grid(row=6, column=0, pady=10)
+        ttk.Button(self.poi_frame, text="Select Countries", command=self.area_by_country).grid(row=5, column=0, pady=10)
+        ttk.Button(self.poi_frame, text="Draw area", command=self.area_by_hand).grid(row=5, column=1, pady=10)
+        ttk.Button(self.poi_frame, text="Choose mesh resoltuion", command=self.chooseres).grid(row=5, column=2, pady=10)
+        ttk.Button(self.poi_frame, text="Add POI", command=self.add_poi).grid(row=6, column=2, pady=10)
+        ttk.Button(self.poi_frame, text="Modify POI", command=self.modify_poi).grid(row=6, column=1, pady=10)
+        ttk.Button(self.poi_frame, text="Delete POI", command=self.add_poi).grid(row=6, column=0, pady=10)
 
-        self.l_gsn = ttk.Label(poi_frame, text="Name of the Ground Station : ")
+        self.l_gsn = ttk.Label(self.poi_frame, text="Name of the Ground Station : ")
         self.l_gsn.grid(row=7, column=0, sticky="w")
-        self.gs_name = ttk.Entry(poi_frame)
+        self.gs_name = ttk.Entry(self.poi_frame)
         self.gs_name.grid(row=7, column=1, sticky="e")
 
-        self.l_gslat = ttk.Label(poi_frame, text="Latitude (DD) : ")
+        self.l_gslat = ttk.Label(self.poi_frame, text="Latitude (DD) : ")
         self.l_gslat.grid(row=8, column=0, sticky="w")
-        self.gs_lat = ttk.Entry(poi_frame)
+        self.gs_lat = ttk.Entry(self.poi_frame)
         self.gs_lat.grid(row=8, column=1, sticky="e")
 
-        self.l_gslong = ttk.Label(poi_frame, text="Longitude (DD) : ")
+        self.l_gslong = ttk.Label(self.poi_frame, text="Longitude (DD) : ")
         self.l_gslong.grid(row=9, column=0, sticky="w")
-        self.gs_long = ttk.Entry(poi_frame)
+        self.gs_long = ttk.Entry(self.poi_frame)
         self.gs_long.grid(row=9, column=1, sticky="e")
 
-        self.l_gsalt = ttk.Label(poi_frame, text="Altitude (m) : ")
+        self.l_gsalt = ttk.Label(self.poi_frame, text="Altitude (m) : ")
         self.l_gsalt.grid(row=10, column=0, sticky="w")
-        self.gs_alt = ttk.Entry(poi_frame)
+        self.gs_alt = ttk.Entry(self.poi_frame)
         self.gs_alt.grid(row=10, column=1, sticky="e")
 
-        self.l_gsel = ttk.Label(poi_frame, text="Elevation (°) : ")
+        self.l_gsel = ttk.Label(self.poi_frame, text="Elevation (°) : ")
         self.l_gsel.grid(row=11, column=0, sticky="w")
-        self.gs_ele = ttk.Entry(poi_frame)
+        self.gs_ele = ttk.Entry(self.poi_frame)
         self.gs_ele.grid(row=11, column=1, sticky="e")
 
-        self.l_gsbw = ttk.Label(poi_frame, text="Bandwith (Mhz) : ")
+        self.l_gsbw = ttk.Label(self.poi_frame, text="Bandwith (Mhz) : ")
         self.l_gsbw.grid(row=12, column=0, sticky="w")
-        self.gs_bw = ttk.Entry(poi_frame)
+        self.gs_bw = ttk.Entry(self.poi_frame)
         self.gs_bw.grid(row=12, column=1, sticky="e")
 
-        self.l_gsdeb = ttk.Label(poi_frame, text="Debit (Mb/s) : ")
+        self.l_gsdeb = ttk.Label(self.poi_frame, text="Debit (Mb/s) : ")
         self.l_gsdeb.grid(row=13, column=0, sticky="w")
-        self.gs_deb = ttk.Entry(poi_frame)
+        self.gs_deb = ttk.Entry(self.poi_frame)
         self.gs_deb.grid(row=13, column=1, sticky="e")
 
-        ttk.Label(poi_frame, text="Color : ").grid(row=14, column=0, sticky="w")
-        self.combo_color_gs = ttk.Combobox(poi_frame)
+        ttk.Label(self.poi_frame, text="Color : ").grid(row=14, column=0, sticky="w")
+        self.combo_color_gs = ttk.Combobox(self.poi_frame)
         self.combo_color_gs.grid(row=14, column=1, sticky="e")
         self.combo_color_gs['state'] = 'readonly'
         self.combo_color_gs.set(list_colors[0])
         self.combo_color_gs['values'] = list_colors
 
-        ttk.Button(poi_frame, text="Add Ground Station", command=self.add_gs).grid(row=15, column=2, pady=10)
-        ttk.Button(poi_frame, text="Modify Ground Station", command=self.modify_gs).grid(row=15, column=1, pady=10)   
-        ttk.Button(poi_frame, text="Delete Ground Station", command=self.add_gs).grid(row=15, column=0, pady=10)       
+        ttk.Button(self.poi_frame, text="Add Ground Station", command=self.add_gs).grid(row=15, column=2, pady=10)
+        ttk.Button(self.poi_frame, text="Modify Ground Station", command=self.modify_gs).grid(row=15, column=1, pady=10)   
+        ttk.Button(self.poi_frame, text="Delete Ground Station", command=self.add_gs).grid(row=15, column=0, pady=10)       
 
     def tab5(self):
 
@@ -414,6 +426,7 @@ class SatelliteSimulator(tk.Tk):
             liste_satellite.append(sat)
             self.flag_mod_sat = False
             showinfo("Message", "Satellite ajouté avec succès !")
+            [widget.delete(0, tk.END) for widget in self.sat_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
             showinfo("Error", "Un ou plusieurs parametres sont manquants")
 
@@ -466,7 +479,6 @@ class SatelliteSimulator(tk.Tk):
 
     def fetchTLEdata(self, noradID):
         try:
-
             tle=fetch_tle_from_celestrak(noradID)
             showinfo('Message', f"{tle[0]} has been found !")
             self.sat_name.delete(0, tk.END)
@@ -530,6 +542,7 @@ class SatelliteSimulator(tk.Tk):
                                 liste_satellite[i])
                     liste_constellation.append(cons)
                     showinfo("Message", "Constellation ajoutée avec succès !")
+                    [widget.delete(0, tk.END) for widget in self.const_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
             showinfo("Error", "Un ou plusieurs parametre sont manquants")
 
@@ -614,6 +627,7 @@ class SatelliteSimulator(tk.Tk):
             self.flag_area=False
             self.flag_country = False
             showinfo("Message", "POI ajouté avec succès")
+            [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
             showinfo("Error", "Un ou plusieurs parametres sont manquants")
 
@@ -700,6 +714,7 @@ class SatelliteSimulator(tk.Tk):
             print("Ground Station ajoutée avec succes")
             gs_marker = self.__map_widget.set_marker(gs.get_coordinate()[0], gs.get_coordinate()[1], text=gs.get_name(), marker_color_outside=gs.get_color())
             showinfo("Message", "GS ajouté avec succès !")
+            [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
             showinfo("Error", "Un ou plusieurs parametre sont manquants")
 
@@ -780,8 +795,17 @@ class SatelliteSimulator(tk.Tk):
                                    str(self.combo_const.get()))
             liste_mission.append(mission)
             showinfo("Message", "Mission ajoutée avec succès")
+            [widget.delete(0, tk.END) for widget in self.mission_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
             showinfo("Error", "Un ou plusieurs parametre sont manquants")
+
+    def chooseres(self):
+        window = ChooseResolutionWindow(self.spatialres)
+
+    def spatialres(self, res):
+        folder = Path(f"dataset/{res}/")
+        path_to_shapefile = folder / f"ne_{res}m_admin_0_map_units.shp"
+        world = gpd.read_file(path_to_shapefile)
 
     def area_by_country(self):
         if len(self.poly_list)==0:
@@ -942,6 +966,8 @@ class SatelliteSimulator(tk.Tk):
                 if liste_mission[i].get_name()==str(self.combo_mission.get()):
                     calcul_traj(liste_mission[i], self.__map_widget)
             showinfo("Message", "Simulation simulated correctly")
+            self.forward.config(state="enable")
+            self.backward.config(state="enable")
                               
     def reset(self):
         self.__map_widget.delete_all_marker()
@@ -949,6 +975,8 @@ class SatelliteSimulator(tk.Tk):
         self.__map_widget.delete_all_polygon()
         self.set_map_default()
         reset_liste()
+        self.forward.config(state="disable")
+        self.backward.config(state="disable")
         self.flag_area = False
         self.flag_country = False
         self.flag_mod_sat = False
@@ -962,7 +990,11 @@ class SatelliteSimulator(tk.Tk):
         self.country_coords =[]
         self.country_marker =[]
         self.selected_country_coords = []
-        showinfo("Message", "Simulation reseted")
+        [widget.delete(0, tk.END) for widget in self.sat_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        [widget.delete(0, tk.END) for widget in self.const_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        [widget.delete(0, tk.END) for widget in self.mission_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        showinfo("Message", "Simulation reset")
 
     def save_simulation(self):
         if len(liste_mission)==0:
@@ -985,6 +1017,15 @@ class SatelliteSimulator(tk.Tk):
             showinfo("Message", "Simulation parameters loaded")
         else:
             showinfo("Message", "One or more file could not be loaded, it's recommended to reset the simulation or errors will be encoutered")
+
+    def stepforward(self):
+        pass
+
+    def stepbackward(self):
+        pass
+
+#############################################################################################
+# Additional windows
 
 class ModifySatelliteWindow:
     def __init__(self, showsatinfo):
@@ -1136,3 +1177,25 @@ class FetchTLEWindow:
             self.top.destroy()
         except ValueError:
             showinfo("Error", "You need to enter a correct NORAD ID !!!")
+
+class ChooseResolutionWindow:
+    def __init__(self, chooseres):
+        self.top = tk.Toplevel()
+        self.frame = tk.Frame(self.top)
+        self.frame.pack(expand=True, fill='both', padx=10, pady=10)
+        self.chooseres = chooseres
+
+        self.l_res =ttk.Label(self.frame, text="Choose the mesh resolution  : ")
+        self.l_res.grid(row=0, column=0, sticky="w")
+        self.res = tk.StringVar()
+        self.res.set("50")
+
+        self.res1 = ttk.Radiobutton(self.frame, text="1:10 m", variable=self.res, value="10").grid(row=1, column=0, pady=10)
+        self.res2 = ttk.Radiobutton(self.frame, text="1:50 m", variable=self.res, value="50").grid(row=1, column=1, pady=10)
+        self.res3 = ttk.Radiobutton(self.frame, text="1:110 m", variable=self.res, value="110").grid(row=1, column=2, pady=10)
+
+        ttk.Button(self.frame, text="Launch", command=self.submit).grid(row=2, column=1, pady=10)
+
+    def submit(self):
+            self.chooseres(str(self.res.get()))
+            self.top.destroy()
