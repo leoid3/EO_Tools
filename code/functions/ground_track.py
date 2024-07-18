@@ -9,7 +9,9 @@ def plot_ground_track(sat, times, ax, color, map):
     """
     lats = []
     lons = []
-    marker_list = []
+    marker_temp = []
+    marker_list=[]
+
     x_sat, y_sat, z_sat = sat.get_position()
     vx_sat, vy_sat, vz_sat = sat.get_velocity()
 
@@ -25,17 +27,20 @@ def plot_ground_track(sat, times, ax, color, map):
     segments = []
     segment_lats = []
     segment_lons = []
+    
     for i in range(len(lons) - 1):
         segment_lats.append(lats[i])
         segment_lons.append(lons[i])
         marker = map.set_marker(lats[i], lons[i])
-        marker_list.append(marker.position)
+        marker_temp.append(marker.position)
         marker.delete()
         if abs(lons[i+1] - lons[i]) > 180:
             segments.append((segment_lats, segment_lons))
-            if len(marker_list) >=2:
-                path = map.set_path(marker_list, color=sat.get_color(), width="1")
-            marker_list=[]
+            marker_list.append(marker_temp)
+            if len(marker_temp) >=2:
+                path = map.set_path(marker_temp, name=sat.get_name(), color=sat.get_color(), width="1")
+                
+            marker_temp=[]
             segment_lats = []
             segment_lons = []
               
@@ -43,9 +48,10 @@ def plot_ground_track(sat, times, ax, color, map):
     segment_lons.append(lons[-1])
     segments.append((segment_lats, segment_lons))
     marker = map.set_marker(lats[-1], lons[-1])
-    marker_list.append(marker.position)
+    marker_temp.append(marker.position)
+    marker_list.append(marker_temp)
     marker.delete()
-    path = map.set_path(marker_list, color=sat.get_color(), width="1")
+    path = map.set_path(marker_temp, name=sat.get_name(), color=sat.get_color(), width="1")
     label = 'Ground Track of '+str(sat.get_name())
     
     for segment_lats, segment_lons in segments:
@@ -56,6 +62,8 @@ def plot_ground_track(sat, times, ax, color, map):
     ax.set_ylabel('Latitude')
     ax.set_title('Satellite Ground Track')
     ax.legend()
+
+    return marker_list
 
 def show_gs_on_ground_track(gs, ax):
     """

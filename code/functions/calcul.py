@@ -25,6 +25,7 @@ def calcul_traj(mission, map):
     ax_2D = fig2d.add_subplot(111, projection=ccrs.PlateCarree())
     ax_2D.stock_img()
 
+    liste_marker =[]
     liste_ta =[]
     t0=0
     delta = mission.get_TF() - mission.get_T0()
@@ -71,7 +72,8 @@ def calcul_traj(mission, map):
             const.add_sat(temp_sat)
 
             show_sat(temp_sat, ax_3D)
-            plot_ground_track(temp_sat, times, ax_2D, const.get_color(), map)
+            marker_pos= plot_ground_track(temp_sat, times, ax_2D, const.get_color(), map)
+            liste_marker.append(marker_pos)
         plot_orbit_3d(temp_sat, ax_3D, const.get_name(), const.get_color(), delta)
     mission.add_constellation(const)
 
@@ -80,6 +82,9 @@ def calcul_traj(mission, map):
     for i in range(mission.get_nb_gs()):
         show_gs_on_ground_track(mission.get_gs(i), ax_2D)
     plt.show()
+
+    return liste_marker
+
 
 def kepler_equation(E, M, e):
     return E - e * np.sin(E) - M

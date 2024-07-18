@@ -25,17 +25,19 @@ class SatelliteSimulator(tk.Tk):
         self.final_poly_list = []
         self.country_coords =[]
         self.country_marker =[]
+        self.calcul_marker =[]
         self.selected_country_coords = []
+        self.satellite_marker =[]
         self.flag_area = False
         self.flag_country = False
         self.flag_mod_sat = False
         self.flag_mod_const = False
         self.flag_mod_gs = False
         self.flag_mod_poi = False
+        self.i_forward = 0
+        self.i_backward = 0
         self.title("EO Tools")
         self.geometry("1920x1080")
-
-        
 
         self.main_frame = ttk.Frame(self)
         self.main_frame.pack(expand=True, fill='both', padx=10, pady=10)
@@ -62,21 +64,47 @@ class SatelliteSimulator(tk.Tk):
         self.__map_widget.add_right_click_menu_command(label="Add Marker", command=self.add_marker_hand, pass_coords=True)
         self.__map_widget.add_right_click_menu_command(label="Select a Country", command=self.add_marker_country, pass_coords=True)
         
+        self.comb_aff_sat = ttk.Combobox(map_frame, postcommand=self.comb_miss_simu)
+        self.comb_aff_sat.pack(anchor="s")
+        self.comb_aff_sat['state'] = 'readonly'
+        self.comb_aff_sat.set('Choose a satellite...')
+        self.comb_aff_sat.config(state='disable')
+        ttk.Button(map_frame, text="Load", command=self.showsatonmap).pack(anchor="s")
 
         ttk.Button(map_frame, text="Satellite view", command=self.set_map_satellite).pack(side= "left")
         ttk.Button(map_frame, text="Map view", command=self.set_map_default).pack(side="left")
-        self.forward = ttk.Button(map_frame, text=">", command=self.stepforward)
-        self.forward.pack(side= "right")
-        self.backward = ttk.Button(map_frame, text="<", command=self.stepbackward)
-        self.backward.pack(after= self.forward, side= "right")
-        self.forward.config(state="disable")
-        self.backward.config(state="disable")
         
     def set_map_satellite(self):
         self.__map_widget.set_tile_server(satellite_map, max_zoom=20)
     
     def set_map_default(self):
         self.__map_widget.set_tile_server(normal_map, max_zoom=20)
+
+    def showsatonmap(self):
+        index_path = 0
+        self.__map_widget.delete_all_path()
+        if len(self.satellite_marker) != 0:
+            self.satellite_marker[0].delete()
+            self.satellite_marker=[]
+
+        for i in range(len(liste_mission)):
+                if liste_mission[i].get_name()==str(self.combo_mission.get()):
+                    cons = liste_mission[i].get_constellation()
+                    for j in range(cons.get_walkerT()):
+                        sat = cons.get_sat(j)
+                        if (sat.get_name()+f"-{j+1}") == str(self.comb_aff_sat.get()):
+                            index_path=j
+                            chosen_sat = sat
+        if chosen_sat == None:
+            showinfo("Error", "Something went wrong")
+        else:
+            for i in range(len(self.calcul_marker[index_path])):
+                if len(self.calcul_marker[index_path][i]) >=2:
+                    path = self.__map_widget.set_path(self.calcul_marker[index_path][i], name=chosen_sat.get_name(), color=chosen_sat.get_color(), width="1")
+            pos =self.calcul_marker[index_path][len(self.calcul_marker[index_path])-1]
+            sat_pos = pos[-1]
+            marker = self.__map_widget.set_marker(sat_pos[0], sat_pos[1], text=chosen_sat.get_name(), marker_color_outside=chosen_sat.get_color())
+            self.satellite_marker.append(marker)
 
     def tab1(self):
         # Frame for the satellite tab
@@ -936,6 +964,20 @@ class SatelliteSimulator(tk.Tk):
                 temp.append(liste_mission[i].get_name())
             self.combo_mission['values'] = temp    
 
+    def comb_miss_simu(self):
+        if len(self.calcul_marker)==0:
+            self.comb_aff_sat['values'] = 'Aucun'
+        else:
+            temp=[]
+            temp.append("All")
+            for i in range(len(liste_mission)):
+                if liste_mission[i].get_name()==str(self.combo_mission.get()):
+                    cons = liste_mission[i].get_constellation()
+                    for j in range(cons.get_walkerT()):
+                        sat = cons.get_sat(j)
+                        temp.append(sat.get_name()+f"-{j+1}")
+            self.comb_aff_sat['values'] = temp
+                    
     def ass_poi_mission(self):
         if (str(self.combo_poi.get()) == 'Choose a POI...') or (str(self.combo_poi.get()) == 'Aucun'):
             print("You need to choose a POI to continue")
@@ -964,10 +1006,9 @@ class SatelliteSimulator(tk.Tk):
         else:
             for i in range(len(liste_mission)):
                 if liste_mission[i].get_name()==str(self.combo_mission.get()):
-                    calcul_traj(liste_mission[i], self.__map_widget)
+                     self.calcul_marker = calcul_traj(liste_mission[i], self.__map_widget)
             showinfo("Message", "Simulation simulated correctly")
-            self.forward.config(state="enable")
-            self.backward.config(state="enable")
+            self.comb_aff_sat.config(state='enable')
                               
     def reset(self):
         self.__map_widget.delete_all_marker()
@@ -975,8 +1016,6 @@ class SatelliteSimulator(tk.Tk):
         self.__map_widget.delete_all_polygon()
         self.set_map_default()
         reset_liste()
-        self.forward.config(state="disable")
-        self.backward.config(state="disable")
         self.flag_area = False
         self.flag_country = False
         self.flag_mod_sat = False
@@ -990,6 +1029,7 @@ class SatelliteSimulator(tk.Tk):
         self.country_coords =[]
         self.country_marker =[]
         self.selected_country_coords = []
+        self.comb_aff_sat.config(state='disable')
         [widget.delete(0, tk.END) for widget in self.sat_frame.winfo_children() if isinstance(widget, tk.Entry)]
         [widget.delete(0, tk.END) for widget in self.const_frame.winfo_children() if isinstance(widget, tk.Entry)]
         [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
@@ -1017,12 +1057,6 @@ class SatelliteSimulator(tk.Tk):
             showinfo("Message", "Simulation parameters loaded")
         else:
             showinfo("Message", "One or more file could not be loaded, it's recommended to reset the simulation or errors will be encoutered")
-
-    def stepforward(self):
-        pass
-
-    def stepbackward(self):
-        pass
 
 #############################################################################################
 # Additional windows
