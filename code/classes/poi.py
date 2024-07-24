@@ -32,7 +32,7 @@ class Point_of_interest:
     def set_sza(self, sza):
         self.__sza = sza
     def reset_coordinate(self):
-        self.__coordinates.clear()
+        self.__coordinates = []
     #Accesseur
     def get_name(self):
         return self.__name

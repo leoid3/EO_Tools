@@ -8,6 +8,7 @@ def get_country_name(coords):
     try:
         lat = coords[0][0]
         lon = coords[0][1]
+        # Methode pour trouver un pays en fonction de lat/long
         geolocator = Nominatim(user_agent="country")
         location = geolocator.reverse((lat, lon), language='en')
         address = location.raw['address']
@@ -30,14 +31,15 @@ def get_poly_coordinate(country_name, state_name):
     
     final_coords =[]
     poly_coord = []
+    #Verifie si la distinction entre pays et région peut etre faite
     country = world[world[country_column] == state_name]
     if not country.empty:
         name = state_name
     else:
         country = world[world[country_column] == country_name]
         name = country_name
+    
     # Vérifie si la géométrie est un MultiPolygon ou un Polygon
-
     if not country.empty:
         geom = country.geometry.iloc[0]
         if geom.type == 'Polygon':

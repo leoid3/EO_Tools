@@ -2,6 +2,9 @@ from config import *
 import numpy as np
 
 def latlong_to_cartesian(lat, long, altitude):
+    """
+    Permet de passer de lat/long en cartesien ECEF.
+    """
     #Reference : WGS84 ellipsoid --> goal : x,y,z in ECEF Frame
     a = earth_radius
     f = 1/298.257223563
@@ -16,6 +19,9 @@ def latlong_to_cartesian(lat, long, altitude):
     return X, Y, Z
 
 def ECEF_to_ENU(x, y, z, lat, lon, x_s, y_s, z_s):
+    """
+    Permet de passer de cartesien ECEF en cartesien ENU.
+    """
     lat_rad = np.deg2rad(lat)
     lon_rad = np.deg2rad(lon)
     
@@ -39,6 +45,7 @@ def eci_to_ecef(sx, sy, sz, vx, vy, vz, t, theta0=0):
     Transforme le vecteur d'état de ECI à ECEF.
     """
     theta = theta0 + omega_earth * t
+    # Matrice de transformation ECI vers ECEF
     R = np.array([[np.cos(theta), np.sin(theta), 0],
                   [-np.sin(theta), np.cos(theta), 0],
                   [0, 0, 1]])

@@ -1,7 +1,5 @@
 import numpy as np
 from functions.coordinates_converter import eci_to_ecef
-
-
 from config import *
 
 def calculate_revisits_with_swath(states, latitude_target, longitude_target, swath_width):

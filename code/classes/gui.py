@@ -6,7 +6,6 @@ import tkintermapview as tkmap
 import matplotlib.pyplot as plt
 from tkcalendar import DateEntry
 import numpy as np
-import os
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
 from functions.calcul import calcul_traj, true_anomaly
