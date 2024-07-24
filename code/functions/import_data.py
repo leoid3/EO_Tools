@@ -116,12 +116,12 @@ def import_from_csv():
     try:
         with open('Mission.csv', 'r') as file:
             csvreader = csv.DictReader(file)
-            temp_gs = []
-            temp_poi=[]
             for row in csvreader:
                 if len(row)==0:
                     print("skip")
                 else:
+                    temp_gs = []
+                    temp_poi=[]
                     for i in range(len(liste_constellation)):
                         if (liste_constellation[i].get_name()) == str(row['constellation']):
                             const = liste_constellation[i]

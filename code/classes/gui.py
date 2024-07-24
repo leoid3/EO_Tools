@@ -1090,8 +1090,8 @@ class SatelliteSimulator(tk.Tk):
                 angle_list.append(float(angle))
             ax_2D.set_xlabel("Time (s)")
             ax_2D.set_ylabel("Elevation (°)")
-            ax_2D.plot(time, angle_list, label=f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}")
-            ax_2D.plot(time, np.full((len(time), 1), ele) , label=f"Minimum elevation ({ele}°) to be seen from {gs.get_name()}")  
+            ax_2D.plot(time, angle_list, label=f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}", color=chosen_sat.get_color())
+            ax_2D.plot(time, np.full((len(time), 1), ele) , label=f"Minimum elevation ({ele}°) to be seen from {gs.get_name()}", color=gs.get_color())  
             ax_2D.legend() 
         plt.show()
     
