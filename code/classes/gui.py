@@ -6,6 +6,8 @@ import tkintermapview as tkmap
 import matplotlib.pyplot as plt
 from tkcalendar import DateEntry
 import numpy as np
+from datetime import timedelta, datetime
+
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
 from functions.calcul import calcul_traj, true_anomaly
@@ -14,6 +16,7 @@ from functions.import_data import import_from_csv
 from functions.country import get_country_name, get_poly_coordinate
 from satellite_tle import fetch_tle_from_celestrak
 from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
+from functions.save_result import save_gs_visibility
 
 #############################################################################################
 # Main window
@@ -312,7 +315,6 @@ class SatelliteSimulator(tk.Tk):
         self.__poi_temp = []
         self.__gs_temp = []
         self.mission_frame = ttk.LabelFrame(self.main_frame, text="Mission Creation :", padding=(10, 10),)
-        #self.mission_frame.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
         self.mission_frame.place(relx=0.73, rely=0.57)
 
         self.l_mn = ttk.Label(self.mission_frame, text="Name of the Mission : ")
@@ -322,11 +324,9 @@ class SatelliteSimulator(tk.Tk):
 
         self.l_misstime = ttk.Label(self.mission_frame, text="Starting date of the mission (DD/MM/YYYY) : ")
         self.l_misstime.grid(row=1, column=0, sticky="w")
-        #self.mission_time = ttk.Entry(self.mission_frame)
         self.mission_time = DateEntry(self.mission_frame, date_pattern="dd/mm/yyyy")
         self.mission_time.grid(row=1, column=1, sticky="e")
         
-
         self.l_misstime_end = ttk.Label(self.mission_frame, text="Ending date of the mission ((DD/MM/YYYY)) : ")
         self.l_misstime_end.grid(row=2, column=0, sticky="w")
         self.mission_time_end = DateEntry(self.mission_frame, date_pattern="dd/mm/yyyy")
@@ -1010,7 +1010,7 @@ class SatelliteSimulator(tk.Tk):
             for i in range(len(liste_mission)):
                 if liste_mission[i].get_name()==str(self.combo_mission.get()):
                      self.calcul_marker = calcul_traj(liste_mission[i], self.__map_widget)
-            showinfo("Message", "Simulation simulated correctly")
+            #showinfo("Message", "Simulation simulated correctly")
             self.comb_aff_sat.config(state='enable')
                               
     def reset(self):
@@ -1063,6 +1063,8 @@ class SatelliteSimulator(tk.Tk):
 
     def gs_visibility(self, miss, chosen_sat):
         time = []
+        
+        visibility_date = []
         delta = miss.get_TF() - miss.get_T0()
         if delta.days==0:
             tf=86400
@@ -1075,6 +1077,9 @@ class SatelliteSimulator(tk.Tk):
 
         for i in range(int(miss.get_nb_gs())):
             angle_list = []
+            time_inter = []
+            interval = []
+            gs_visiblity_interval = []
             fig2d = plt.figure()
             ax_2D = fig2d.add_subplot(111)
             gs = miss.get_gs(i)
@@ -1083,17 +1088,41 @@ class SatelliteSimulator(tk.Tk):
             ele = gs.get_elevation()
             gsx, gsy, gsz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
+            #Convertit d'ECEF vers ENU
             for j in range(len(x)):
                 enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, gsx, gsy, gsz)
                 E, N, U = enu_vector
                 angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
                 angle_list.append(float(angle))
+            #Recupère le temps pour lequel angle>ele
+            for j in range(len(angle_list)):
+                if angle_list[j]>ele:
+                    time_inter.append(time[j])
+            #Cree un tableau d'interval de temps
+            for j in range(len(time_inter) - 1):
+                if j ==0:
+                    t0=time_inter[0]
+                if (time_inter[j+1]-time_inter[j])>dt:
+                    tf = time_inter[j]
+                    interval.append((t0, tf))
+                    t0 = time_inter[j+1]
+                if j == len(time_inter) - 2:
+                    tf = time_inter[j+1]
+                    interval.append((t0, tf))
             ax_2D.set_xlabel("Time (s)")
             ax_2D.set_ylabel("Elevation (°)")
             ax_2D.plot(time, angle_list, label=f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}", color=chosen_sat.get_color())
             ax_2D.plot(time, np.full((len(time), 1), ele) , label=f"Minimum elevation ({ele}°) to be seen from {gs.get_name()}", color=gs.get_color())  
-            ax_2D.legend() 
+            ax_2D.legend()
+            gs_visiblity_interval.append(interval)
+            for k in range(len(gs_visiblity_interval)):
+                for j in range(len(gs_visiblity_interval[k])):
+                    temp = gs_visiblity_interval[k][j]
+                    date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
+                    date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
+                    visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin))
         plt.show()
+        save_gs_visibility(visibility_date)
     
 #############################################################################################
 # Additional windows
