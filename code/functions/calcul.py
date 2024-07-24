@@ -9,6 +9,7 @@ from functions.orbit_3D import plot_orbit_3d, show_sat
 from functions.ground_track import plot_ground_track, show_gs_on_ground_track, show_poi_on_ground_track
 
 
+
 def calcul_traj(mission, map):
     """
     Permet de calculer l'obite et de l'afficher.
@@ -24,6 +25,12 @@ def calcul_traj(mission, map):
     fig2d = plt.figure()
     ax_2D = fig2d.add_subplot(111, projection=ccrs.PlateCarree())
     ax_2D.stock_img()
+
+    for i in range(mission.get_nb_poi()):
+        show_poi_on_ground_track(mission.get_poi(i), ax_2D)
+    for i in range(mission.get_nb_gs()):
+        show_gs_on_ground_track(mission.get_gs(i), ax_2D)
+
 
     liste_marker =[]
     liste_ta =[]
@@ -77,10 +84,7 @@ def calcul_traj(mission, map):
         plot_orbit_3d(temp_sat, ax_3D, const.get_name(), const.get_color(), delta)
     mission.add_constellation(const)
 
-    for i in range(mission.get_nb_poi()):
-        show_poi_on_ground_track(mission.get_poi(i), ax_2D)
-    for i in range(mission.get_nb_gs()):
-        show_gs_on_ground_track(mission.get_gs(i), ax_2D)
+
     plt.show()
 
     return liste_marker

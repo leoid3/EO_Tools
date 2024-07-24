@@ -1,5 +1,5 @@
 import numpy as np
-from functions.eci_to_ecef import eci_to_ecef
+from functions.coordinates_converter import eci_to_ecef
 from functions.find_tm import centroid
 from config import *
 
@@ -11,18 +11,25 @@ def plot_ground_track(sat, times, ax, color, map):
     lons = []
     marker_temp = []
     marker_list=[]
-
+    ecef_state = []
+    xs = []
+    ys =[]
+    zs=[]
     x_sat, y_sat, z_sat = sat.get_position()
     vx_sat, vy_sat, vz_sat = sat.get_velocity()
 
     for sx, sy, sz, vx, vy, vz, t in zip(x_sat, y_sat, z_sat, vx_sat, vy_sat, vz_sat, times):
         state_ecef = eci_to_ecef(sx, sy, sz, vx, vy, vz, t)
         x, y, z = state_ecef[:3]
+        xs.append(x)
+        ys.append(y)
+        zs.append(z)
         lat = np.degrees(np.arcsin(z / np.linalg.norm([x, y, z])))
         lon = np.degrees(np.arctan2(y, x))
         lats.append(lat)
         lons.append(lon)
-    
+    ecef_state.append((xs, ys, zs))
+    sat.set_position_ecef(np.array(ecef_state))
     # Séparer les segments de la trace au sol
     segments = []
     segment_lats = []
@@ -38,8 +45,7 @@ def plot_ground_track(sat, times, ax, color, map):
             segments.append((segment_lats, segment_lons))
             marker_list.append(marker_temp)
             if len(marker_temp) >=2:
-                path = map.set_path(marker_temp, name=sat.get_name(), color=sat.get_color(), width="1")
-                
+                path = map.set_path(marker_temp, name=sat.get_name(), color=sat.get_color(), width="1")       
             marker_temp=[]
             segment_lats = []
             segment_lons = []

@@ -3,8 +3,10 @@ from tkinter import ttk
 from tkinter.messagebox import showinfo
 from tktooltip import ToolTip
 import tkintermapview as tkmap
+import matplotlib.pyplot as plt
 from tkcalendar import DateEntry
 import numpy as np
+import os
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
 from functions.calcul import calcul_traj, true_anomaly
@@ -12,6 +14,7 @@ from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv
 from functions.country import get_country_name, get_poly_coordinate
 from satellite_tle import fetch_tle_from_celestrak
+from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
 
 #############################################################################################
 # Main window
@@ -34,8 +37,6 @@ class SatelliteSimulator(tk.Tk):
         self.flag_mod_const = False
         self.flag_mod_gs = False
         self.flag_mod_poi = False
-        self.i_forward = 0
-        self.i_backward = 0
         self.title("EO Tools")
         self.geometry("1920x1080")
 
@@ -89,8 +90,9 @@ class SatelliteSimulator(tk.Tk):
 
         for i in range(len(liste_mission)):
                 if liste_mission[i].get_name()==str(self.combo_mission.get()):
+                    miss = liste_mission[i]
                     cons = liste_mission[i].get_constellation()
-                    for j in range(cons.get_walkerT()):
+                    for j in range(int(cons.get_walkerT())):
                         sat = cons.get_sat(j)
                         if (sat.get_name()+f"-{j+1}") == str(self.comb_aff_sat.get()):
                             index_path=j
@@ -105,7 +107,8 @@ class SatelliteSimulator(tk.Tk):
             sat_pos = pos[-1]
             marker = self.__map_widget.set_marker(sat_pos[0], sat_pos[1], text=chosen_sat.get_name(), marker_color_outside=chosen_sat.get_color())
             self.satellite_marker.append(marker)
-
+            self.gs_visibility(miss, chosen_sat)
+                 
     def tab1(self):
         # Frame for the satellite tab
         self.sat_frame = ttk.LabelFrame(self.main_frame, text="Satellite Creation :", padding=(10, 10))
@@ -645,13 +648,14 @@ class SatelliteSimulator(tk.Tk):
             self.poi_name.config(state="enable")
             for i in range(len(self.marker_poi)):
                 self.marker_poi[i].delete()
-            self.final_poly_list.append(self.poly_list[0])
-            self.poly_list = []
             self.marker_list = []
             self.selected_country_coords = []
             self.country_marker = []
             if self.flag_area==False:
                 poi_marker = self.__map_widget.set_marker(poi.get_coordinate(0)[0], poi.get_coordinate(0)[1], text=poi.get_name(), marker_color_outside=poi.get_color())
+            else:
+                self.final_poly_list.append(self.poly_list[0])
+                self.poly_list = []
             self.flag_area=False
             self.flag_country = False
             showinfo("Message", "POI ajouté avec succès")
@@ -973,7 +977,7 @@ class SatelliteSimulator(tk.Tk):
             for i in range(len(liste_mission)):
                 if liste_mission[i].get_name()==str(self.combo_mission.get()):
                     cons = liste_mission[i].get_constellation()
-                    for j in range(cons.get_walkerT()):
+                    for j in range(int(cons.get_walkerT())):
                         sat = cons.get_sat(j)
                         temp.append(sat.get_name()+f"-{j+1}")
             self.comb_aff_sat['values'] = temp
@@ -1058,6 +1062,40 @@ class SatelliteSimulator(tk.Tk):
         else:
             showinfo("Message", "One or more file could not be loaded, it's recommended to reset the simulation or errors will be encoutered")
 
+    def gs_visibility(self, miss, chosen_sat):
+        time = []
+        delta = miss.get_TF() - miss.get_T0()
+        if delta.days==0:
+            tf=86400
+            dt=miss.get_timestep()
+        else:
+            tf=3600*24*delta.days
+            dt=3600*24*miss.get_timestep()
+        for i in range(0, int(tf+dt), int(dt)):
+            time.append(i)
+
+        for i in range(int(miss.get_nb_gs())):
+            angle_list = []
+            fig2d = plt.figure()
+            ax_2D = fig2d.add_subplot(111)
+            gs = miss.get_gs(i)
+            lat, long = gs.get_coordinate()
+            alt = gs.get_altitude()
+            ele = gs.get_elevation()
+            gsx, gsy, gsz = latlong_to_cartesian(lat, long, alt)
+            x, y, z = chosen_sat.get_position_ecef()
+            for j in range(len(x)):
+                enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, gsx, gsy, gsz)
+                E, N, U = enu_vector
+                angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
+                angle_list.append(float(angle))
+            ax_2D.set_xlabel("Time (s)")
+            ax_2D.set_ylabel("Elevation (°)")
+            ax_2D.plot(time, angle_list, label=f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}")
+            ax_2D.plot(time, np.full((len(time), 1), ele) , label=f"Minimum elevation ({ele}°) to be seen from {gs.get_name()}")  
+            ax_2D.legend() 
+        plt.show()
+    
 #############################################################################################
 # Additional windows
 

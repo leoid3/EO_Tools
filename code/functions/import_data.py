@@ -130,10 +130,14 @@ def import_from_csv():
                             
                     temp = [i.strip() for i in row['gs'].split(',')]
                     for j in range(len(temp)):
-                        if j==0:
+                        if len(temp)==1:
                             u = temp[j]
                             u=u[2:]
                             u=u[:-2]
+                        elif j==0:
+                            u = temp[j]
+                            u=u[2:]
+                            u=u[:-1]
                         elif j== len(temp)-1:
                             u = temp[j]
                             u=u[1:]
@@ -148,10 +152,14 @@ def import_from_csv():
                                 print("done GS")
                     temp = [i.strip() for i in row['poi'].split(',')]
                     for j in range(len(temp)):
-                        if j==0:
+                        if len(temp)==1:
                             u = temp[j]
                             u=u[2:]
                             u=u[:-2]
+                        elif j==0:
+                            u = temp[j]
+                            u=u[2:]
+                            u=u[:-1]
                         elif j== len(temp)-1:
                             u = temp[j]
                             u=u[1:]

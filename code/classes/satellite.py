@@ -16,6 +16,9 @@ class Satellite:
         self.__x = []
         self.__y = []
         self.__z = []
+        self.__x_ecef = []
+        self.__y_ecef = []
+        self.__z_ecef = []
         self.__vx = []
         self.__vy = []
         self.__vz = []
@@ -37,6 +40,10 @@ class Satellite:
         self.__x = np.transpose(pos[:, 0])
         self.__y = np.transpose(pos[:, 1])
         self.__z = np.transpose(pos[:, 2])
+    def set_position_ecef(self, pos):
+        self.__x_ecef = np.transpose(pos[:, 0])
+        self.__y_ecef = np.transpose(pos[:, 1])
+        self.__z_ecef = np.transpose(pos[:, 2])
     def set_velocity(self, velo):
         self.__vx = np.transpose(velo[:, 3])
         self.__vy = np.transpose(velo[:, 4])
@@ -57,5 +64,7 @@ class Satellite:
         return self.__orbit
     def get_position(self):
         return self.__x[:], self.__y[:], self.__z[:]
+    def get_position_ecef(self):
+        return self.__x_ecef[:], self.__y_ecef[:], self.__z_ecef[:]
     def get_velocity(self):
         return self.__vx[:], self.__vy[:], self.__vz[:]

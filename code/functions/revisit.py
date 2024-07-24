@@ -1,5 +1,5 @@
 import numpy as np
-from functions.eci_to_ecef import eci_to_ecef
+from functions.coordinates_converter import eci_to_ecef
 
 
 from config import *
