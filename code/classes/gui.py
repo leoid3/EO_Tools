@@ -18,6 +18,7 @@ from satellite_tle import fetch_tle_from_celestrak
 from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
 from functions.save_result import save_gs_visibility, save_poi_visibility
 from functions.find_tm import centroid
+from functions.sun_zenith_angle import sun_zenith_angle
 
 #############################################################################################
 # Main window
@@ -1106,7 +1107,8 @@ class SatelliteSimulator(tk.Tk):
                     interval.append((t0, tf))
             ax_2D.set_xlabel("Time (s)")
             ax_2D.set_ylabel("Elevation (°)")
-            ax_2D.plot(time, angle_list, label=f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}", color=chosen_sat.get_color())
+            plt.title(f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}")
+            ax_2D.plot(time, angle_list, label=f"Elevation from {gs.get_name()}", color=chosen_sat.get_color())
             ax_2D.plot(time, np.full((len(time), 1), ele) , label=f"Minimum elevation ({ele}°) to be seen from {gs.get_name()}", color=gs.get_color())  
             ax_2D.legend()
             gs_visiblity_interval.append(interval)
@@ -1141,7 +1143,6 @@ class SatelliteSimulator(tk.Tk):
             else:
                 long, lat = centroid(poi.get_area())
             alt = poi.get_altitude()
-            
             poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
 
@@ -1169,8 +1170,10 @@ class SatelliteSimulator(tk.Tk):
             poi_visiblity_interval.append(interval)
             ax_2D.set_xlabel("Time (s)")
             ax_2D.set_ylabel("Elevation (°)")
-            ax_2D.plot(time, angle_list, label=f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}", color=chosen_sat.get_color())
+            plt.title(f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}")
+            ax_2D.plot(time, angle_list, label=f"Elevation from {poi.get_name()}", color=chosen_sat.get_color())
             ax_2D.legend()
+            zenith_angle, zenith_time = sun_zenith_angle(miss, lat, long, alt, poi.get_timezone(), poi.get_name())
             for k in range(len(poi_visiblity_interval)):
                 for j in range(len(poi_visiblity_interval[k])):
                     temp = poi_visiblity_interval[k][j]
