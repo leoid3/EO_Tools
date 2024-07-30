@@ -87,7 +87,7 @@ def import_from_csv():
                     v = orbital_element[5]
                     v= float(v[:-2])
                     orb = init_orb(float(a-6378e3)/1000, float(orbital_element[1]), float(orbital_element[2]), float(orbital_element[3]), float(orbital_element[4]), v)
-                    sat = init_sat(row['name'], row['swath'], row['depointing'], row['color'], row['type'], orb)
+                    sat = init_sat(row['name'], float(row['swath']), float(row['depointing']), row['color'], row['type'], orb)
                     liste_satellite.append(sat)
             showinfo("Message", 'Satellite imported')
     except FileNotFoundError:

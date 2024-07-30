@@ -25,11 +25,11 @@ def init_poi(name, coord, alt, color, area):
         tm = findtimezone(coord)
     else:
         x, y= centroid(coord)
-        tm =findtimezone((x, y))
+        tm = findtimezone((x, y))
 
 
     poi = Point_of_interest(name, alt, tm, color, area)
-    if area==False:
+    if area == False:
         poi.set_coordinate(coord[1], coord[0])
     else:
         for i in range(len(coord)):

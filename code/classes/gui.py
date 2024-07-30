@@ -10,13 +10,14 @@ from datetime import timedelta, datetime
 
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
-from functions.calcul import calcul_traj, true_anomaly
+from functions.calcul import calcul_traj, true_anomaly, simulation_time
 from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv
 from functions.country import get_country_name, get_poly_coordinate
 from satellite_tle import fetch_tle_from_celestrak
 from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
-from functions.save_result import save_gs_visibility
+from functions.save_result import save_gs_visibility, save_poi_visibility
+from functions.find_tm import centroid
 
 #############################################################################################
 # Main window
@@ -96,7 +97,7 @@ class SatelliteSimulator(tk.Tk):
                     cons = liste_mission[i].get_constellation()
                     for j in range(int(cons.get_walkerT())):
                         sat = cons.get_sat(j)
-                        if (sat.get_name()+f"-{j+1}") == str(self.comb_aff_sat.get()):
+                        if (sat.get_name()) == str(self.comb_aff_sat.get()):
                             index_path=j
                             chosen_sat = sat
         if chosen_sat == None:
@@ -110,6 +111,7 @@ class SatelliteSimulator(tk.Tk):
             marker = self.__map_widget.set_marker(sat_pos[0], sat_pos[1], text=chosen_sat.get_name(), marker_color_outside=chosen_sat.get_color())
             self.satellite_marker.append(marker)
             self.gs_visibility(miss, chosen_sat)
+            self.poi_visibility(miss, chosen_sat)
                  
     def tab1(self):
         # Frame for the satellite tab
@@ -978,7 +980,7 @@ class SatelliteSimulator(tk.Tk):
                     cons = liste_mission[i].get_constellation()
                     for j in range(int(cons.get_walkerT())):
                         sat = cons.get_sat(j)
-                        temp.append(sat.get_name()+f"-{j+1}")
+                        temp.append(sat.get_name())
             self.comb_aff_sat['values'] = temp
                     
     def ass_poi_mission(self):
@@ -1063,15 +1065,8 @@ class SatelliteSimulator(tk.Tk):
 
     def gs_visibility(self, miss, chosen_sat):
         time = []
-        
         visibility_date = []
-        delta = miss.get_TF() - miss.get_T0()
-        if delta.days==0:
-            tf=86400
-            dt=miss.get_timestep()
-        else:
-            tf=3600*24*delta.days
-            dt=3600*24*miss.get_timestep()
+        _, t0, tf, dt = simulation_time(miss)
         for i in range(0, int(tf+dt), int(dt)):
             time.append(i)
 
@@ -1100,7 +1095,7 @@ class SatelliteSimulator(tk.Tk):
                     time_inter.append(time[j])
             #Cree un tableau d'interval de temps
             for j in range(len(time_inter) - 1):
-                if j ==0:
+                if j == 0:
                     t0=time_inter[0]
                 if (time_inter[j+1]-time_inter[j])>dt:
                     tf = time_inter[j]
@@ -1123,7 +1118,68 @@ class SatelliteSimulator(tk.Tk):
                     visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin))
         plt.show()
         save_gs_visibility(visibility_date)
-    
+
+    def poi_visibility(self, miss, chosen_sat):
+        time = []
+        visibility_date = []
+        _, t0, tf, dt = simulation_time(miss)
+        for i in range(0, int(tf+dt), int(dt)):
+            time.append(i)
+
+        for i in range(int(miss.get_nb_poi())):
+            angle_list = []
+            distance_list = []
+            time_inter = []
+            interval = []
+            poi_visiblity_interval = []
+            fig2d = plt.figure()
+            ax_2D = fig2d.add_subplot(111)
+            poi = miss.get_poi(i)
+            if poi.IsArea() == False:
+                long = poi.get_coordinate(0)[1]
+                lat =  poi.get_coordinate(0)[0]
+            else:
+                long, lat = centroid(poi.get_area())
+            alt = poi.get_altitude()
+            
+            poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
+            x, y, z = chosen_sat.get_position_ecef()
+
+            #Convertit d'ECEF vers ENU
+            for j in range(len(x)):
+                enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, poix, poiy, poiz)
+                E, N, U = enu_vector
+                angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
+                angle_list.append(float(angle))
+                distance = np.sqrt(E**2 + N**2)
+                distance_list.append(distance)
+            for j in range(len(angle_list)):
+                if (angle_list[j] > 0) and (distance_list[j] < chosen_sat.get_swath()*1000):
+                    time_inter.append(time[j])
+            for j in range(len(time_inter) - 1):
+                if j == 0:
+                    t0=time_inter[0]
+                if (time_inter[j+1]-time_inter[j])>dt:
+                    tf = time_inter[j]
+                    interval.append((t0, tf))
+                    t0 = time_inter[j+1]
+                if j == len(time_inter) - 2:
+                    tf = time_inter[j+1]
+                    interval.append((t0, tf))
+            poi_visiblity_interval.append(interval)
+            ax_2D.set_xlabel("Time (s)")
+            ax_2D.set_ylabel("Elevation (°)")
+            ax_2D.plot(time, angle_list, label=f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}", color=chosen_sat.get_color())
+            ax_2D.legend()
+            for k in range(len(poi_visiblity_interval)):
+                for j in range(len(poi_visiblity_interval[k])):
+                    temp = poi_visiblity_interval[k][j]
+                    date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
+                    date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
+                    visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin))
+        plt.show()
+        save_poi_visibility(visibility_date)
+
 #############################################################################################
 # Additional windows
 

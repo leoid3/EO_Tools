@@ -1,3 +1,6 @@
-name,swath,depointing,type,color,orbit
-Sentinel,25.0,40.0,EO,red,"[(7378000.0, 0.01, 40.0, 0.0, 0.0, 0.0)]"
-eccentricity,12.0,2.0,EO,purple,"[(26378000.0, 0.5, 60.0, 0.0, 0.0, 0.0)]"
+name,swath,depointing,type,color,orbit
+
+Sentinel,1200,40.0,EO,red,"[(7378000.0, 0.01, 40.0, 0.0, 0.0, 0.0)]"
+
+eccentricity,12.0,2.0,EO,purple,"[(26378000.0, 0.5, 60.0, 0.0, 0.0, 0.0)]"
+
