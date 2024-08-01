@@ -1066,17 +1066,20 @@ class SatelliteSimulator(tk.Tk):
 
     def gs_visibility(self, miss, chosen_sat):
         time = []
+        time_in_days = []
         visibility_date = []
         _, t0, tf, dt = simulation_time(miss)
         for i in range(0, int(tf+dt), int(dt)):
             time.append(i)
-
+        for j in range(len(time)):
+                time_in_days.append(datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(time[j])))
+        
         for i in range(int(miss.get_nb_gs())):
             angle_list = []
             time_inter = []
             interval = []
             gs_visiblity_interval = []
-            fig2d = plt.figure()
+            fig2d = plt.figure(figsize=(10, 6))
             ax_2D = fig2d.add_subplot(111)
             gs = miss.get_gs(i)
             lat, long = gs.get_coordinate()
@@ -1108,9 +1111,12 @@ class SatelliteSimulator(tk.Tk):
             ax_2D.set_xlabel("Time (s)")
             ax_2D.set_ylabel("Elevation (°)")
             plt.title(f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}")
-            ax_2D.plot(time, angle_list, label=f"Elevation from {gs.get_name()}", color=chosen_sat.get_color())
-            ax_2D.plot(time, np.full((len(time), 1), ele) , label=f"Minimum elevation ({ele}°) to be seen from {gs.get_name()}", color=gs.get_color())  
+            ax_2D.plot(time_in_days, angle_list, label=f"Elevation from {gs.get_name()}", color=chosen_sat.get_color())
+            ax_2D.plot(time_in_days, np.full((len(time_in_days), 1), ele) , label=f"Minimum elevation ({ele}°) to be seen from {gs.get_name()}", color=gs.get_color())  
             ax_2D.legend()
+            plt.grid(True)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
             gs_visiblity_interval.append(interval)
             for k in range(len(gs_visiblity_interval)):
                 for j in range(len(gs_visiblity_interval[k])):
@@ -1123,18 +1129,20 @@ class SatelliteSimulator(tk.Tk):
 
     def poi_visibility(self, miss, chosen_sat):
         time = []
+        time_in_days = []
         visibility_date = []
         _, t0, tf, dt = simulation_time(miss)
         for i in range(0, int(tf+dt), int(dt)):
             time.append(i)
-
+        for j in range(len(time)):
+                time_in_days.append(datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(time[j])))
         for i in range(int(miss.get_nb_poi())):
             angle_list = []
             distance_list = []
             time_inter = []
             interval = []
             poi_visiblity_interval = []
-            fig2d = plt.figure()
+            fig2d = plt.figure(figsize=(10, 6))
             ax_2D = fig2d.add_subplot(111)
             poi = miss.get_poi(i)
             if poi.IsArea() == False:
@@ -1167,12 +1175,17 @@ class SatelliteSimulator(tk.Tk):
                 if j == len(time_inter) - 2:
                     tf = time_inter[j+1]
                     interval.append((t0, tf))
+            
+            
             poi_visiblity_interval.append(interval)
-            ax_2D.set_xlabel("Time (s)")
+            ax_2D.set_xlabel("Time (UTC)")
             ax_2D.set_ylabel("Elevation (°)")
             plt.title(f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}")
-            ax_2D.plot(time, angle_list, label=f"Elevation from {poi.get_name()}", color=chosen_sat.get_color())
+            ax_2D.plot(time_in_days, angle_list, label=f"Elevation from {poi.get_name()}", color=chosen_sat.get_color())
             ax_2D.legend()
+            plt.grid(True)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
             zenith_angle, zenith_time = sun_zenith_angle(miss, lat, long, alt, poi.get_timezone(), poi.get_name())
             for k in range(len(poi_visiblity_interval)):
                 for j in range(len(poi_visiblity_interval[k])):

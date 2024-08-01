@@ -23,7 +23,7 @@ def sun_zenith_angle(miss, latitude_target, longitude_target, altitude, time_zon
     time_range = pd.date_range(t0, tf, freq='h', tz=site.tz)
     solpos = pvlib.solarposition.get_solarposition(time_range, site.latitude, site.longitude, site.altitude, method='nrel_numpy')
 
-    zenith_angle = solpos['zenith']
+    zenith_angle = solpos['elevation']
     
     plt.figure(figsize=(10, 6))
     plt.plot(time_range, zenith_angle, label='Sun zenith angle', color='blue')

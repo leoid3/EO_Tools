@@ -122,3 +122,11 @@ def simulation_time(mission):
         dt=3600*24*mission.get_timestep()
 
     return delta, t0, tf, dt
+
+def calcul_swath(a, depointing, swath):
+    h=(a-earth_radius)/1000
+    rigth_extension = h * np.tan(np.deg2rad(depointing))
+    swath_ext = (swath/2)*(1+np.sin(np.deg2rad(depointing)))/1000
+    equivalent_swath=2*(rigth_extension+swath_ext)
+
+    return equivalent_swath
