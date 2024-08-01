@@ -111,8 +111,9 @@ class SatelliteSimulator(tk.Tk):
             sat_pos = pos[-1]
             marker = self.__map_widget.set_marker(sat_pos[0], sat_pos[1], text=chosen_sat.get_name(), marker_color_outside=chosen_sat.get_color())
             self.satellite_marker.append(marker)
-            self.gs_visibility(miss, chosen_sat)
-            self.poi_visibility(miss, chosen_sat)
+            window = ResultChoiceWindow(self.gs_visibility, self.poi_visibility, miss, chosen_sat)
+            #self.gs_visibility(miss, chosen_sat)
+            #self.poi_visibility(miss, chosen_sat)
                  
     def tab1(self):
         # Frame for the satellite tab
@@ -1143,7 +1144,7 @@ class SatelliteSimulator(tk.Tk):
             interval = []
             poi_visiblity_interval = []
             fig2d = plt.figure(figsize=(10, 6))
-            ax_2D = fig2d.add_subplot(111)
+            ax_2D = fig2d.add_subplot(211)
             poi = miss.get_poi(i)
             if poi.IsArea() == False:
                 long = poi.get_coordinate(0)[1]
@@ -1180,13 +1181,25 @@ class SatelliteSimulator(tk.Tk):
             poi_visiblity_interval.append(interval)
             ax_2D.set_xlabel("Time (UTC)")
             ax_2D.set_ylabel("Elevation (°)")
-            plt.title(f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}")
             ax_2D.plot(time_in_days, angle_list, label=f"Elevation from {poi.get_name()}", color=chosen_sat.get_color())
             ax_2D.legend()
+            plt.title(f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}")
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
+            
             zenith_angle, zenith_time = sun_zenith_angle(miss, lat, long, alt, poi.get_timezone(), poi.get_name())
+            ax_2D_2 = fig2d.add_subplot(212)
+            ax_2D_2.plot(zenith_time, zenith_angle, label='Sun zenith angle', color='blue')
+            ax_2D_2.plot(time_in_days, np.full((len(time_in_days), 1), (float(miss.get_minsza()))) , label=f"Minimum sun elevation ({float(miss.get_minsza())}°) to be seen for the mission", color='black')
+            ax_2D_2.set_xlabel('Times (UTC)')
+            ax_2D_2.set_ylabel('Sun elevation angle (°)')
+            ax_2D_2.legend()
+            plt.title(f"Evolution of the sun elevation angle at {poi.get_name()}")
+            plt.grid(True)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            
             for k in range(len(poi_visiblity_interval)):
                 for j in range(len(poi_visiblity_interval[k])):
                     temp = poi_visiblity_interval[k][j]
@@ -1371,3 +1384,30 @@ class ChooseResolutionWindow:
     def submit(self):
             self.chooseres(str(self.res.get()))
             self.top.destroy()
+
+class ResultChoiceWindow:
+    def __init__(self, gs_visibility, poi_visibility, miss, chosen_sat):
+        self.top = tk.Toplevel()
+        self.frame = tk.Frame(self.top)
+        self.frame.pack(expand=True, fill='both', padx=10, pady=10)
+        self.gs_visibility = gs_visibility
+        self.poi_visibility = poi_visibility
+        self.miss = miss
+        self.chosen_sat = chosen_sat
+
+        self.l_choice =ttk.Label(self.frame, text="Choose a result  : ")
+        self.l_choice.grid(row=0, column=0, sticky="w")
+        
+        self.l_gs_visibility = ttk.Label(self.frame, text='Visibility from Ground Stations')
+        self.l_gs_visibility.grid(row=1, column=0, sticky="w")
+        ttk.Button(self.frame, text='Show', command=self.gs).grid(row=1, column=1, sticky="w")
+
+        self.l_poi_visibility = ttk.Label(self.frame, text='Visibility of POIs')
+        self.l_poi_visibility.grid(row=2, column=0, sticky="w")
+        ttk.Button(self.frame, text='Show', command=self.poi).grid(row=2, column=1, sticky="w")
+
+
+    def gs(self):
+        self.gs_visibility(self.miss, self.chosen_sat)
+    def poi(self):
+        self.poi_visibility(self.miss, self.chosen_sat)

@@ -10,7 +10,7 @@ from datetime import timedelta
 
 def sun_zenith_angle(miss, latitude_target, longitude_target, altitude, time_zone, name):
     """
-    Permet de calculer le sza d'un point à une heure précise.
+    Permet de calculer le sza d'un point sur la durée de la mission.
     """
     delta, _, _, _ = simulation_time(miss)
     t0 = miss.get_T0()
@@ -24,15 +24,5 @@ def sun_zenith_angle(miss, latitude_target, longitude_target, altitude, time_zon
     solpos = pvlib.solarposition.get_solarposition(time_range, site.latitude, site.longitude, site.altitude, method='nrel_numpy')
 
     zenith_angle = solpos['elevation']
-    
-    plt.figure(figsize=(10, 6))
-    plt.plot(time_range, zenith_angle, label='Sun zenith angle', color='blue')
-    plt.xlabel('Times (UTC)')
-    plt.ylabel('Sun zenith angle (°)')
-    plt.title(f"Evolution of the sun zenith angle at {name}")
-    plt.legend()
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+
     return zenith_angle, time_range
