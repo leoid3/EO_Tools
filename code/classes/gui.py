@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
-from functions.calcul import calcul_traj, true_anomaly, simulation_time
+from functions.calcul import calcul_traj, true_anomaly, simulation_time, calcul_swath
 from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv
 from functions.country import get_country_name, get_poly_coordinate
@@ -1080,14 +1080,18 @@ class SatelliteSimulator(tk.Tk):
             time_inter = []
             interval = []
             gs_visiblity_interval = []
+            date_ini_list = []
+            timedelta_list = []
+
             fig2d = plt.figure(figsize=(10, 6))
-            ax_2D = fig2d.add_subplot(111)
+            ax_2D = fig2d.add_subplot(211)
             gs = miss.get_gs(i)
             lat, long = gs.get_coordinate()
             alt = gs.get_altitude()
             ele = gs.get_elevation()
             gsx, gsy, gsz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
+
             #Convertit d'ECEF vers ENU
             for j in range(len(x)):
                 enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, gsx, gsy, gsz)
@@ -1109,6 +1113,8 @@ class SatelliteSimulator(tk.Tk):
                 if j == len(time_inter) - 2:
                     tf = time_inter[j+1]
                     interval.append((t0, tf))
+
+            #Plot de l'angle d'élévation au cour du temps
             ax_2D.set_xlabel("Time (s)")
             ax_2D.set_ylabel("Elevation (°)")
             plt.title(f"Visibility from {gs.get_name()} of {chosen_sat.get_name()}")
@@ -1125,6 +1131,18 @@ class SatelliteSimulator(tk.Tk):
                     date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
                     date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
                     visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin))
+                    date_ini_list.append(date_ini)
+                    delta = date_fin - date_ini
+                    timedelta_list.append(delta.seconds)
+            #Plot les durées de visibilité
+            ax_2D_2 = fig2d.add_subplot(212)
+            ax_2D_2.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
+            ax_2D_2.set_ylabel('Times (s)')
+            ax_2D_2.legend()
+            plt.title(f"Windows opoortunities duration at {gs.get_name()}")
+            plt.grid(True)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
         plt.show()
         save_gs_visibility(visibility_date)
 
@@ -1143,8 +1161,11 @@ class SatelliteSimulator(tk.Tk):
             time_inter = []
             interval = []
             poi_visiblity_interval = []
-            fig2d = plt.figure(figsize=(10, 6))
-            ax_2D = fig2d.add_subplot(211)
+            date_ini_list = []
+            timedelta_list = []
+
+            fig2d = plt.figure(figsize=(8, 10))
+            ax_2D = fig2d.add_subplot(311)
             poi = miss.get_poi(i)
             if poi.IsArea() == False:
                 long = poi.get_coordinate(0)[1]
@@ -1154,7 +1175,7 @@ class SatelliteSimulator(tk.Tk):
             alt = poi.get_altitude()
             poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
-
+            swath = calcul_swath(chosen_sat)*1000
             #Convertit d'ECEF vers ENU
             for j in range(len(x)):
                 enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, poix, poiy, poiz)
@@ -1164,7 +1185,7 @@ class SatelliteSimulator(tk.Tk):
                 distance = np.sqrt(E**2 + N**2)
                 distance_list.append(distance)
             for j in range(len(angle_list)):
-                if (angle_list[j] > 0) and (distance_list[j] < chosen_sat.get_swath()*1000):
+                if (angle_list[j] > 0) and (distance_list[j] < swath):
                     time_inter.append(time[j])
             for j in range(len(time_inter) - 1):
                 if j == 0:
@@ -1177,8 +1198,8 @@ class SatelliteSimulator(tk.Tk):
                     tf = time_inter[j+1]
                     interval.append((t0, tf))
             
-            
             poi_visiblity_interval.append(interval)
+            #Plot de l'angle d'élévation au cour du temps
             ax_2D.set_xlabel("Time (UTC)")
             ax_2D.set_ylabel("Elevation (°)")
             ax_2D.plot(time_in_days, angle_list, label=f"Elevation from {poi.get_name()}", color=chosen_sat.get_color())
@@ -1189,7 +1210,8 @@ class SatelliteSimulator(tk.Tk):
             plt.tight_layout()
             
             zenith_angle, zenith_time = sun_zenith_angle(miss, lat, long, alt, poi.get_timezone(), poi.get_name())
-            ax_2D_2 = fig2d.add_subplot(212)
+            #Plot l'élévation du soleil sur le point d'interet au cour du temps
+            ax_2D_2 = fig2d.add_subplot(312)
             ax_2D_2.plot(zenith_time, zenith_angle, label='Sun zenith angle', color='blue')
             ax_2D_2.plot(time_in_days, np.full((len(time_in_days), 1), (float(miss.get_minsza()))) , label=f"Minimum sun elevation ({float(miss.get_minsza())}°) to be seen for the mission", color='black')
             ax_2D_2.set_xlabel('Times (UTC)')
@@ -1206,6 +1228,19 @@ class SatelliteSimulator(tk.Tk):
                     date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
                     date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
                     visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin))
+                    date_ini_list.append(date_ini)
+                    delta = date_fin - date_ini
+                    timedelta_list.append(delta.seconds)
+            #Plot les durées de visibilité
+            ax_2D_3 = fig2d.add_subplot(313)
+            ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
+            ax_2D_3.set_ylabel('Times (s)')
+            ax_2D_3.legend()
+            plt.title(f"Visibilities duration at {poi.get_name()} with a swath of {chosen_sat.get_swath()} km")
+            plt.grid(True)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+        
         plt.show()
         save_poi_visibility(visibility_date)
 

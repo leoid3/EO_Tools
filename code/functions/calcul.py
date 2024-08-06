@@ -123,7 +123,11 @@ def simulation_time(mission):
 
     return delta, t0, tf, dt
 
-def calcul_swath(a, depointing, swath):
+def calcul_swath(sat):
+    swath = sat.get_swath()
+    depointing = sat.get_depoiting()
+    orb = sat.get_orbit()
+    a = orb.get_semi_major_axis()
     h=(a-earth_radius)/1000
     rigth_extension = h * np.tan(np.deg2rad(depointing))
     swath_ext = (swath/2)*(1+np.sin(np.deg2rad(depointing)))/1000
