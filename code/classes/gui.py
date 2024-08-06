@@ -381,20 +381,20 @@ class SatelliteSimulator(tk.Tk):
 
     def tab6(self):
         # Frame for simulation control
-        control_frame = ttk.LabelFrame(self.main_frame, text="Simulation :", padding=(10, 10))
+        self.control_frame = ttk.LabelFrame(self.main_frame, text="Simulation :", padding=(10, 10))
         
-        control_frame.place(relx =0.38, rely= 0.88)
+        self.control_frame.place(relx =0.38, rely= 0.88)
 
-        ttk.Label(control_frame, text="Mission : ").grid(row=0, column=1, sticky="w")
-        self.combo_mission = ttk.Combobox(control_frame, postcommand= self.comb_miss_upd)
+        ttk.Label(self.control_frame, text="Mission : ").grid(row=0, column=1, sticky="w")
+        self.combo_mission = ttk.Combobox(self.control_frame, postcommand= self.comb_miss_upd)
         self.combo_mission.grid(row=0, column=1, sticky="e")
         self.combo_mission['state'] = 'readonly'
         self.combo_mission.set('Choose a Mission...')
 
-        ttk.Button(control_frame, text="Run Simulation", command=self.run_simulation).grid(row=1, column=0, pady=5)
-        ttk.Button(control_frame, text="Save Simulation", command=self.save_simulation).grid(row=1, column=1, pady=5)
-        ttk.Button(control_frame, text="Load Simulation", command=self.load_simulation).grid(row=1, column=2, pady=5)
-        ttk.Button(control_frame, text="Reset", command=self.reset).grid(row=1, column=3, pady=5)
+        ttk.Button(self.control_frame, text="Run Simulation", command=self.run_simulation).grid(row=1, column=0, pady=5)
+        ttk.Button(self.control_frame, text="Save Simulation", command=self.save_simulation).grid(row=1, column=1, pady=5)
+        ttk.Button(self.control_frame, text="Load Simulation", command=self.load_simulation).grid(row=1, column=2, pady=5)
+        ttk.Button(self.control_frame, text="Reset", command=self.reset).grid(row=1, column=3, pady=5)
        
     def add_satellite(self):
         i=0
@@ -1041,6 +1041,7 @@ class SatelliteSimulator(tk.Tk):
         [widget.delete(0, tk.END) for widget in self.const_frame.winfo_children() if isinstance(widget, tk.Entry)]
         [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
         [widget.delete(0, tk.END) for widget in self.mission_frame.winfo_children() if isinstance(widget, tk.Entry)]
+        [widget.delete(0, tk.END) for widget in self.control_frame.winfo_children() if isinstance(widget, tk.Entry)]
         showinfo("Message", "Simulation reset")
 
     def save_simulation(self):
@@ -1130,10 +1131,10 @@ class SatelliteSimulator(tk.Tk):
                     temp = gs_visiblity_interval[k][j]
                     date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
                     date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
-                    visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin))
                     date_ini_list.append(date_ini)
                     delta = date_fin - date_ini
                     timedelta_list.append(delta.seconds)
+                    visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin, delta.seconds))
             #Plot les durées de visibilité
             ax_2D_2 = fig2d.add_subplot(212)
             ax_2D_2.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
@@ -1227,10 +1228,10 @@ class SatelliteSimulator(tk.Tk):
                     temp = poi_visiblity_interval[k][j]
                     date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
                     date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
-                    visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin))
                     date_ini_list.append(date_ini)
                     delta = date_fin - date_ini
                     timedelta_list.append(delta.seconds)
+                    visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds))
             #Plot les durées de visibilité
             ax_2D_3 = fig2d.add_subplot(313)
             ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')

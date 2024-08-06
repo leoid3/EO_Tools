@@ -1,8 +1,8 @@
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from config import *
+import time
 from functions.oe_to_sv import orbital_elements_to_state_vectors
 from functions.solver import runge_kutta_4, deriv
 from functions.orbit_3D import plot_orbit_3d, show_sat
@@ -14,6 +14,7 @@ def calcul_traj(mission, map):
     """
     Permet de calculer l'obite et de l'afficher.
     """
+    start_time = time.time()
     const = mission.get_constellation()
     #temp_sat = const.get_model()
     #temp_orbit = temp_sat.get_orbit()
@@ -83,7 +84,8 @@ def calcul_traj(mission, map):
             plot_orbit_3d(new_sat, ax_3D, const.get_name(), const.get_color(), delta)
     mission.add_constellation(const)
 
-
+    end_time = time.time()
+    print(f"Elapsed time : {end_time - start_time} s")
     plt.show()
 
     return liste_marker

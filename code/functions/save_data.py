@@ -8,7 +8,6 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
     
     #Mission
     mission_data = []
-    mission_fields = ['name', 'starttime', 'endtime', 'timestep', 'type', 'minsza', 'poi', 'gs', 'constellation']
     for i in range(len(lm)):
         temp1 = []
         temp2 = []
@@ -30,7 +29,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
                     temp3.get_name()
                 ]
         mission_data.append(mission)
-    filename = "Mission.csv"
+    filename = simulation_folder / "Mission.csv"
     with open(filename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(mission_fields)
@@ -38,7 +37,6 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
     
     #POI
     POI_data = []
-    poi_fields = ['name', 'coordinate', 'altitude','color', 'timezone', 'sza', 'area']
     for i in range(len(lpoi)):
         if lpoi[i].IsArea() == True:
             coord = lpoi[i].get_area()
@@ -53,7 +51,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
                lpoi[i].IsArea()
             ]
         POI_data.append(poi)
-    filename = "POI.csv"
+    filename = simulation_folder / "POI.csv"
     with open(filename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(poi_fields)
@@ -61,7 +59,6 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
 
     #GS
     GS_data = []
-    gs_fields =['name', 'coordinate', 'altitude', 'elevation', 'bandwidth', 'debit', 'color']
     for i in range(len(lgs)):
         gs =[lgs[i].get_name(),
              lgs[i].get_coordinate(),
@@ -71,7 +68,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
              lgs[i].get_debit(),
              lgs[i].get_color()]
         GS_data.append(gs)
-    filename = "GS.csv"
+    filename = simulation_folder / "GS.csv"
     with open(filename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(gs_fields)
@@ -79,7 +76,6 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
     
     #Constellation
     cons_data = []
-    cons_fields =['name', 'walkerT', 'walkerP', 'walkerF', 'satmodel', 'color']
     for i in range(len(lc)):
         temp = lc[i].get_model()
         cons = [lc[i].get_name(),
@@ -89,7 +85,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
                 temp.get_name(),
                 lc[i].get_color()]
         cons_data.append(cons)
-    filename = "Constellation.csv"
+    filename = simulation_folder / "Constellation.csv"
     with open(filename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(cons_fields)
@@ -97,7 +93,6 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
 
     #Satellite
     sat_data = []
-    sat_fields =['name', 'swath', 'depointing', 'type', 'color', 'orbit']
     for i in range(len(ls)):
         temp4 = ls[i].get_orbit()
         sat = [ls[i].get_name(),
@@ -107,18 +102,8 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
                ls[i].get_color(),
                [temp4.get_all()]]
         sat_data.append(sat)
-    filename = "Satellites.csv"
+    filename = simulation_folder / "Satellites.csv"
     with open(filename, 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(sat_fields)
         csvwriter.writerows(sat_data)
-    """
-    nb_sat = lc.get_nb_sat_tot()
-    for i in range(nb_sat):
-        sat= lc.get_sat(i)
-        file_name = str(lc.get_name())+"_"+str(sat.get_name()) + f"-{i+1}.csv"
-        with open(file_name, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(column_names)
-            writer.writerows(np.transpose(np.concatenate((sat.get_position(), sat.get_velocity()))))
-    """

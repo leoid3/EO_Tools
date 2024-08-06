@@ -24,9 +24,20 @@ folder = Path("dataset/50/")
 path_to_shapefile = folder / "ne_50m_admin_0_map_units.shp"
 world = gpd.read_file(path_to_shapefile)
 
-#Definition de l'exportation
+#Definition de l'exportation (données de simulation)
+simulation_folder = Path("simulation_data/")
+mission_fields = ['name', 'starttime', 'endtime', 'timestep', 'type', 'minsza', 'poi', 'gs', 'constellation']
+poi_fields = ['name', 'coordinate', 'altitude','color', 'timezone', 'sza', 'area']
+gs_fields =['name', 'coordinate', 'altitude', 'elevation', 'bandwidth', 'debit', 'color']
+cons_fields =['name', 'walkerT', 'walkerP', 'walkerF', 'satmodel', 'color']
+sat_fields =['name', 'swath', 'depointing', 'type', 'color', 'orbit']
 
-column_names = ["X", "Y", "Z", "Vx", "Vy", "Vz"]
+#Definition de l'exportation (résultats de simulation)
+result_folder = Path("results/")
+resultfields_gs =['Satellite name', 'Ground Station name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)']
+resultfields_poi =[f'Satellite name', 'POI name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)']
+
+#Listes pour l'IHM
 list_colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
 sat_type = ['SAR', 'EO']
 

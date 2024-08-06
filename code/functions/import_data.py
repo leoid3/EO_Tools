@@ -12,7 +12,8 @@ def import_from_csv():
     er=0
     #POI
     try:
-        with open('POI.csv', 'r') as file:
+        filename = simulation_folder / 'POI.csv'
+        with open(filename, 'r') as file:
             
             csvreader = csv.DictReader(file)
             for row in csvreader:
@@ -57,7 +58,8 @@ def import_from_csv():
     
     #GS
     try:
-        with open('GS.csv', 'r') as file:
+        filename = simulation_folder / 'GS.csv'
+        with open(filename, 'r') as file:
             csvreader = csv.DictReader(file)
             for row in csvreader:
                 if len(row)==0:
@@ -75,7 +77,8 @@ def import_from_csv():
     
     #Satellite+orbit
     try:
-        with open('Satellites.csv', 'r') as file:
+        filename = simulation_folder / 'Satellites.csv'
+        with open(filename, 'r') as file:
             csvreader = csv.DictReader(file)
             for row in csvreader:
                 if len(row)==0:
@@ -96,7 +99,8 @@ def import_from_csv():
     
     #Constellation
     try:
-        with open('Constellation.csv', 'r') as file:
+        filename = simulation_folder / 'Constellation.csv'
+        with open(filename, 'r') as file:
             csvreader = csv.DictReader(file)
             for row in csvreader:
                 if len(row)==0:
@@ -114,7 +118,8 @@ def import_from_csv():
 
     #Mission
     try:
-        with open('Mission.csv', 'r') as file:
+        filename = simulation_folder / 'Mission.csv'
+        with open(filename, 'r') as file:
             csvreader = csv.DictReader(file)
             for row in csvreader:
                 if len(row)==0:
