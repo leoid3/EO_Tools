@@ -1,8 +1,7 @@
-basemap
-basemap_data
 Cartopy
 geopandas
 geopy
+itur
 matplotlib
 numpy
 pandas
@@ -11,5 +10,4 @@ pytz
 satellitetle
 timezonefinder
 tkcalendar
-tkinter_tooltip
 tkintermapview
