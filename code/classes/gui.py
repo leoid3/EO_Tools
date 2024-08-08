@@ -1139,7 +1139,7 @@ class SatelliteSimulator(tk.Tk):
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
-            fig2d.savefig(result_folder / f"Result {gs.get_name()} visibility ({chosen_sat.get_name()}) Graph.png")
+            fig2d.savefig(result_folder / f"Result {gs.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
         plt.show()
         save_gs_visibility(visibility)
 
@@ -1240,7 +1240,7 @@ class SatelliteSimulator(tk.Tk):
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
-            fig2d.savefig(result_folder / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) Graph.png")
+            fig2d.savefig(result_folder / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
         
         plt.show()
         save_poi_visibility(visibility)
