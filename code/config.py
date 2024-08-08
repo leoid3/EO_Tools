@@ -42,7 +42,7 @@ sat_fields =['name', 'swath', 'depointing', 'type', 'color', 'orbit']
 #Definition de l'exportation (résultats de simulation)
 result_folder = Path("results/")
 resultfields_gs =['Satellite name', 'Ground Station name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)', 'Data received (Mb)']
-resultfields_poi =[f'Satellite name', 'POI name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)']
+resultfields_poi =[f'Satellite name', 'POI name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)', 'Mean solar elevation (°)']
 
 #Listes pour l'IHM
 list_colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']

@@ -1228,10 +1228,10 @@ class SatelliteSimulator(tk.Tk):
                     date_ini_list.append(date_ini)
                     delta = date_fin - date_ini
                     timedelta_list.append(delta.seconds)
-                    #elevation_ini = zenith_angle.loc[date_ini.strftime("%Y-%m-%d %H:%M:%S")].elevation
-                    #elevation_fin = zenith_angle.loc[date_fin.strftime("%Y-%m-%d %H:%M:%S")].elevation
-                    #mean_elevation = (elevation_ini+elevation_fin)/2
-                    visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds))
+                    elevation_ini = zenith_angle.loc[date_ini.strftime("%Y-%m-%d %H:%M:%S")].elevation
+                    elevation_fin = zenith_angle.loc[date_fin.strftime("%Y-%m-%d %H:%M:%S")].elevation
+                    mean_elevation = (elevation_ini+elevation_fin)/2
+                    visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds, mean_elevation))
             #Plot les durées de visibilité
             ax_2D_3 = fig2d.add_subplot(313)
             ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
