@@ -16,14 +16,12 @@ def calcul_traj(mission, map):
     """
     start_time = time.time()
     const = mission.get_constellation()
-    #temp_sat = const.get_model()
-    #temp_orbit = temp_sat.get_orbit()
 
-    fig3d = plt.figure()
+    fig3d = plt.figure(figsize=(10, 10))
     ax_3D = fig3d.add_subplot(111, projection='3d')
     ax_3D.plot([0], [0], [0], 'o', label='Terre', markersize=12)
 
-    fig2d = plt.figure()
+    fig2d = plt.figure(figsize=(10, 10))
     ax_2D = fig2d.add_subplot(111, projection=ccrs.PlateCarree())
     ax_2D.stock_img()
 
@@ -86,6 +84,16 @@ def calcul_traj(mission, map):
 
     end_time = time.time()
     print(f"Elapsed time : {end_time - start_time} s")
+    box = ax_2D.get_position()
+    ax_2D.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax_2D.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    box = ax_3D.get_position()
+    ax_3D.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax_3D.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    fig2d.savefig(result_folder / f"Ground Track of {mission.get_name()}.png", bbox_inches='tight')
+    fig3d.savefig(result_folder / f"Orbit of {mission.get_name()}.png", bbox_inches='tight')
+
     plt.show()
 
     return liste_marker

@@ -1076,8 +1076,6 @@ class SatelliteSimulator(tk.Tk):
             gs_visiblity_interval = []
             date_ini_list = []
             timedelta_list = []
-            max_ele = []
-            liste_ele = []
             fig2d = plt.figure(figsize=(10, 6))
             ax_2D = fig2d.add_subplot(211)
             gs = miss.get_gs(i)
@@ -1098,14 +1096,11 @@ class SatelliteSimulator(tk.Tk):
             for j in range(len(angle_list)):
                 if angle_list[j]>ele:
                     time_inter.append(time[j])
-                    liste_ele.append(angle_list[j])
                     
-
             #Cree un tableau d'interval de temps
             for j in range(len(time_inter) - 1):
                 if j == 0:
                     t0=time_inter[0]
-                    ele0 = liste_ele[0]
                 if (time_inter[j+1]-time_inter[j])>dt:
                     tf = time_inter[j]
                     interval.append((t0, tf))
@@ -1137,13 +1132,14 @@ class SatelliteSimulator(tk.Tk):
                     visibility.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin, delta.seconds, data_size))
             #Plot les durées de visibilité
             ax_2D_2 = fig2d.add_subplot(212)
-            ax_2D_2.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
+            ax_2D_2.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.35, color=list_colors, align='center')
             ax_2D_2.set_ylabel('Times (s)')
             ax_2D_2.legend()
             plt.title(f"Windows opoortunities duration at {gs.get_name()}")
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
+            fig2d.savefig(result_folder / f"Result {gs.get_name()} visibility ({chosen_sat.get_name()}) Graph.png")
         plt.show()
         save_gs_visibility(visibility)
 
@@ -1237,13 +1233,14 @@ class SatelliteSimulator(tk.Tk):
                     visibility.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds, mean_elevation))
             #Plot les durées de visibilité
             ax_2D_3 = fig2d.add_subplot(313)
-            ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
+            ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.35, color=list_colors, align='center')
             ax_2D_3.set_ylabel('Times (s)')
             ax_2D_3.legend()
             plt.title(f"Visibilities duration at {poi.get_name()} with a swath of {chosen_sat.get_swath()} km")
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
+            fig2d.savefig(result_folder / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) Graph.png")
         
         plt.show()
         save_poi_visibility(visibility)
