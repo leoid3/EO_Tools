@@ -111,9 +111,7 @@ class SatelliteSimulator(tk.Tk):
             sat_pos = pos[-1]
             marker = self.__map_widget.set_marker(sat_pos[0], sat_pos[1], text=chosen_sat.get_name(), marker_color_outside=chosen_sat.get_color())
             self.satellite_marker.append(marker)
-            window = ResultChoiceWindow(self.gs_visibility, self.poi_visibility, miss, chosen_sat)
-            #self.gs_visibility(miss, chosen_sat)
-            #self.poi_visibility(miss, chosen_sat)
+            window = ResultChoiceWindow(self.gs_visibility, self.poi_visibility, self.save_result, miss, chosen_sat)
                  
     def tab1(self):
         # Frame for the satellite tab
@@ -1064,7 +1062,7 @@ class SatelliteSimulator(tk.Tk):
     def gs_visibility(self, miss, chosen_sat):
         time = []
         time_in_days = []
-        visibility_date = []
+        visibility = []
         _, t0, tf, dt = simulation_time(miss)
         for i in range(0, int(tf+dt), int(dt)):
             time.append(i)
@@ -1078,7 +1076,8 @@ class SatelliteSimulator(tk.Tk):
             gs_visiblity_interval = []
             date_ini_list = []
             timedelta_list = []
-
+            max_ele = []
+            liste_ele = []
             fig2d = plt.figure(figsize=(10, 6))
             ax_2D = fig2d.add_subplot(211)
             gs = miss.get_gs(i)
@@ -1099,10 +1098,14 @@ class SatelliteSimulator(tk.Tk):
             for j in range(len(angle_list)):
                 if angle_list[j]>ele:
                     time_inter.append(time[j])
+                    liste_ele.append(angle_list[j])
+                    
+
             #Cree un tableau d'interval de temps
             for j in range(len(time_inter) - 1):
                 if j == 0:
                     t0=time_inter[0]
+                    ele0 = liste_ele[0]
                 if (time_inter[j+1]-time_inter[j])>dt:
                     tf = time_inter[j]
                     interval.append((t0, tf))
@@ -1131,7 +1134,7 @@ class SatelliteSimulator(tk.Tk):
                     delta = date_fin - date_ini
                     timedelta_list.append(delta.seconds)
                     data_size = (gs.get_debit()*delta.seconds*eff_ini*band_att)/8
-                    visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin, delta.seconds, data_size))
+                    visibility.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin, delta.seconds, data_size))
             #Plot les durées de visibilité
             ax_2D_2 = fig2d.add_subplot(212)
             ax_2D_2.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
@@ -1142,12 +1145,12 @@ class SatelliteSimulator(tk.Tk):
             plt.xticks(rotation=45)
             plt.tight_layout()
         plt.show()
-        save_gs_visibility(visibility_date)
+        save_gs_visibility(visibility)
 
     def poi_visibility(self, miss, chosen_sat):
         time = []
         time_in_days = []
-        visibility_date = []
+        visibility= []
         _, t0, tf, dt = simulation_time(miss)
         for i in range(0, int(tf+dt), int(dt)):
             time.append(i)
@@ -1231,7 +1234,7 @@ class SatelliteSimulator(tk.Tk):
                     elevation_ini = zenith_angle.loc[date_ini.strftime("%Y-%m-%d %H:%M:%S")].elevation
                     elevation_fin = zenith_angle.loc[date_fin.strftime("%Y-%m-%d %H:%M:%S")].elevation
                     mean_elevation = (elevation_ini+elevation_fin)/2
-                    visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds, mean_elevation))
+                    visibility.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds, mean_elevation))
             #Plot les durées de visibilité
             ax_2D_3 = fig2d.add_subplot(313)
             ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
@@ -1243,7 +1246,10 @@ class SatelliteSimulator(tk.Tk):
             plt.tight_layout()
         
         plt.show()
-        save_poi_visibility(visibility_date)
+        save_poi_visibility(visibility)
+
+    def save_result(self):
+        pass
 
 #############################################################################################
 # Additional windows
@@ -1422,12 +1428,13 @@ class ChooseResolutionWindow:
             self.top.destroy()
 
 class ResultChoiceWindow:
-    def __init__(self, gs_visibility, poi_visibility, miss, chosen_sat):
+    def __init__(self, gs_visibility, poi_visibility, save_result, miss, chosen_sat):
         self.top = tk.Toplevel()
         self.frame = tk.Frame(self.top)
         self.frame.pack(expand=True, fill='both', padx=10, pady=10)
         self.gs_visibility = gs_visibility
         self.poi_visibility = poi_visibility
+        self.save_result = save_result
         self.miss = miss
         self.chosen_sat = chosen_sat
 
@@ -1442,8 +1449,14 @@ class ResultChoiceWindow:
         self.l_poi_visibility.grid(row=2, column=0, sticky="w")
         ttk.Button(self.frame, text='Show', command=self.poi).grid(row=2, column=1, sticky="w")
 
+        self.l_result = ttk.Label(self.frame, text='Results')
+        self.l_result.grid(row=3, column=0, sticky="w")
+        ttk.Button(self.frame, text='Save', command=self.poi).grid(row=3, column=1, sticky="w")
 
     def gs(self):
         self.gs_visibility(self.miss, self.chosen_sat)
     def poi(self):
         self.poi_visibility(self.miss, self.chosen_sat)
+    def save(self):
+        self.save_result()
+        self.top.destroy()
