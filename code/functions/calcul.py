@@ -115,13 +115,12 @@ def true_anomaly(M, e):
 
 def simulation_time(mission):
     t0=0
+    dt=mission.get_timestep()
     delta = mission.get_TF() - mission.get_T0()
     if delta.days==0:
         tf=86400
-        dt=mission.get_timestep()
     else:
         tf=3600*24*delta.days
-        dt=3600*24*mission.get_timestep()
 
     return delta, t0, tf, dt
 

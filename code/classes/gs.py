@@ -9,7 +9,7 @@ class Ground_station:
         self.__latitude = lat
         self.__longitude = long
         self.__elevation = e
-        self.__bandwidth = bw
+        self.__band = bw
         self.__debit = d
         self.__altitude = alt
         self.__color = c
@@ -23,8 +23,8 @@ class Ground_station:
         self.__longitude = long
     def set_elevation(self, e):
         self.__elevation = e
-    def set_bandwidth(self, bw):
-        self.__bandwidth = bw
+    def set_band(self, bw):
+        self.__band = bw
     def set_altitude(self, alt):
         self.__altitude = alt
     def set_debit(self, d):
@@ -39,8 +39,8 @@ class Ground_station:
         return self.__latitude, self.__longitude
     def get_elevation(self):
         return self.__elevation
-    def get_bandwidth(self):
-        return self.__bandwidth
+    def get_band(self):
+        return self.__band
     def get_altitude(self):
         return self.__altitude
     def get_debit(self):

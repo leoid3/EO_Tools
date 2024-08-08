@@ -64,7 +64,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
              lgs[i].get_coordinate(),
              lgs[i].get_altitude(),
              lgs[i].get_elevation(),
-             lgs[i].get_bandwidth(),
+             lgs[i].get_band(),
              lgs[i].get_debit(),
              lgs[i].get_color()]
         GS_data.append(gs)

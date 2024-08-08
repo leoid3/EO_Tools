@@ -68,7 +68,7 @@ def import_from_csv():
                     coor = [i.strip() for i in row['coordinate'].split(',')] 
                     lat = coor[0]
                     long = coor[1]
-                    gs = init_gs(row['name'], float(long[:-1]), float(lat[1:]), float(row['altitude']), float(row['elevation']), float(row['bandwidth']), float(row['debit']), row['color'])
+                    gs = init_gs(row['name'], float(long[:-1]), float(lat[1:]), float(row['altitude']), float(row['elevation']), row['band'], float(row['debit']), row['color'])
                     liste_gs.append(gs)
             showinfo("Message", 'GS imported')
     except FileNotFoundError:
@@ -179,7 +179,7 @@ def import_from_csv():
                                 print("done poi")
                     ti = datetime.strptime(row['starttime'], '%Y-%m-%d').date()
                     te = datetime.strptime(row['endtime'], '%Y-%m-%d').date()
-                    miss = init_mission(row['name'], int(float(row['timestep'])),ti, te, row['type'], float(row['minsza']), temp_poi, temp_gs, const.get_name())
+                    miss = init_mission(row['name'], float(row['timestep']),ti, te, row['type'], float(row['minsza']), temp_poi, temp_gs, const.get_name())
                     liste_mission.append(miss)
             showinfo("Message", 'Mission imported')
     except FileNotFoundError:

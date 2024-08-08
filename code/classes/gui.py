@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
-from tktooltip import ToolTip
 import tkintermapview as tkmap
 import matplotlib.pyplot as plt
 from tkcalendar import DateEntry
@@ -19,6 +18,7 @@ from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
 from functions.save_result import save_gs_visibility, save_poi_visibility
 from functions.find_tm import centroid
 from functions.sun_zenith_angle import sun_zenith_angle
+from functions.itur_model import get_attenuation
 
 #############################################################################################
 # Main window
@@ -293,10 +293,12 @@ class SatelliteSimulator(tk.Tk):
         self.gs_ele = ttk.Entry(self.poi_frame)
         self.gs_ele.grid(row=11, column=1, sticky="e")
 
-        self.l_gsbw = ttk.Label(self.poi_frame, text="Bandwith (Mhz) : ")
-        self.l_gsbw.grid(row=12, column=0, sticky="w")
-        self.gs_bw = ttk.Entry(self.poi_frame)
-        self.gs_bw.grid(row=12, column=1, sticky="e")
+        ttk.Label(self.poi_frame, text="Band : ").grid(row=12, column=0, sticky="w")
+        self.combo_bande = ttk.Combobox(self.poi_frame)
+        self.combo_bande.grid(row=12, column=1, sticky="e")
+        self.combo_bande['state'] = 'readonly'
+        self.combo_bande.set(list_bande[0])
+        self.combo_bande['values'] = list_bande
 
         self.l_gsdeb = ttk.Label(self.poi_frame, text="Debit (Mb/s) : ")
         self.l_gsdeb.grid(row=13, column=0, sticky="w")
@@ -336,11 +338,10 @@ class SatelliteSimulator(tk.Tk):
         self.mission_time_end = DateEntry(self.mission_frame, date_pattern="dd/mm/yyyy")
         self.mission_time_end.grid(row=2, column=1, sticky="e")
 
-        self.l_timestep = ttk.Label(self.mission_frame, text="Time step of the mission : ")
+        self.l_timestep = ttk.Label(self.mission_frame, text="Time step of the mission (s) : ")
         self.l_timestep.grid(row=3, column=0, sticky="w")
         self.timestep = ttk.Entry(self.mission_frame)
         self.timestep.grid(row=3, column=1, sticky="e")
-        ToolTip(self.timestep, msg="If the mission duration is less than one day, then enter the timestep in second, else in day", follow=True)
 
         ttk.Label(self.mission_frame, text="Type : ").grid(row=4, column=0, sticky="w")
         self.combo_mission_type = ttk.Combobox(self.mission_frame)
@@ -718,12 +719,6 @@ class SatelliteSimulator(tk.Tk):
             i=+1
         else:
             self.l_gsel.config(foreground = "green")
-        
-        if self.validate_entry(self.gs_bw.get())== False:
-            self.l_gsbw.config(foreground = "red")
-            i=+1
-        else:
-            self.l_gsbw.config(foreground = "green")
         if self.validate_entry(self.gs_deb.get())== False:
             self.l_gsdeb.config(foreground = "red")
             i=+1
@@ -742,7 +737,7 @@ class SatelliteSimulator(tk.Tk):
                            float(self.gs_lat.get()),
                            float(self.gs_alt.get()),
                            float(self.gs_ele.get()),
-                           float(self.gs_bw.get()),
+                           str(self.combo_bande.get()),
                            float(self.gs_deb.get()),
                            str(self.combo_color_gs.get()))
             liste_gs.append(gs)
@@ -1090,6 +1085,7 @@ class SatelliteSimulator(tk.Tk):
             lat, long = gs.get_coordinate()
             alt = gs.get_altitude()
             ele = gs.get_elevation()
+            band_att = get_attenuation(ele, gs.get_band(), lat, long)
             gsx, gsy, gsz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
 
@@ -1134,7 +1130,8 @@ class SatelliteSimulator(tk.Tk):
                     date_ini_list.append(date_ini)
                     delta = date_fin - date_ini
                     timedelta_list.append(delta.seconds)
-                    visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin, delta.seconds))
+                    data_size = (gs.get_debit()*delta.seconds*eff_ini*band_att)/8
+                    visibility_date.append((chosen_sat.get_name(), gs.get_name(), date_ini, date_fin, delta.seconds, data_size))
             #Plot les durées de visibilité
             ax_2D_2 = fig2d.add_subplot(212)
             ax_2D_2.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.5, color=list_colors, align='center')
@@ -1213,7 +1210,7 @@ class SatelliteSimulator(tk.Tk):
             zenith_angle, zenith_time = sun_zenith_angle(miss, lat, long, alt, poi.get_timezone(), poi.get_name())
             #Plot l'élévation du soleil sur le point d'interet au cour du temps
             ax_2D_2 = fig2d.add_subplot(312)
-            ax_2D_2.plot(zenith_time, zenith_angle, label='Sun zenith angle', color='blue')
+            ax_2D_2.plot(zenith_time, zenith_angle['elevation'], label='Sun zenith angle', color='blue')
             ax_2D_2.plot(time_in_days, np.full((len(time_in_days), 1), (float(miss.get_minsza()))) , label=f"Minimum sun elevation ({float(miss.get_minsza())}°) to be seen for the mission", color='black')
             ax_2D_2.set_xlabel('Times (UTC)')
             ax_2D_2.set_ylabel('Sun elevation angle (°)')
@@ -1231,6 +1228,9 @@ class SatelliteSimulator(tk.Tk):
                     date_ini_list.append(date_ini)
                     delta = date_fin - date_ini
                     timedelta_list.append(delta.seconds)
+                    #elevation_ini = zenith_angle.loc[date_ini.strftime("%Y-%m-%d %H:%M:%S")].elevation
+                    #elevation_fin = zenith_angle.loc[date_fin.strftime("%Y-%m-%d %H:%M:%S")].elevation
+                    #mean_elevation = (elevation_ini+elevation_fin)/2
                     visibility_date.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds))
             #Plot les durées de visibilité
             ax_2D_3 = fig2d.add_subplot(313)

@@ -41,15 +41,13 @@ def init_poi(name, coord, alt, color, area):
                     poi.set_coordinate(lat, long)
             else:
                 poi.set_coordinate(coord[i][0], coord[i][1])
-    #poi.set_sza(sun_zenith_angle(poi.get_coordinate(0)[0], poi.get_coordinate(0)[1], poi.get_altitude(), poi.get_timezone(), poi.get_name()))
-    #print(poi.get_sza())
     return poi
 
-def init_gs(name, long, lat, alt, ele, bw, deb, color):
+def init_gs(name, long, lat, alt, ele, band, deb, color):
     """
     Permet d'initialiser les stations sol.
     """
-    gs = Ground_station(name, lat, long, alt, ele, bw, deb, color)
+    gs = Ground_station(name, lat, long, alt, ele, band, deb, color)
     return gs
 
 def init_mission(name, ts, ti, te, type, sza, lst_poi, lst_gs, const, dp = False):
