@@ -14,7 +14,6 @@ def import_from_csv():
     try:
         filename = simulation_folder / 'POI.csv'
         with open(filename, 'r') as file:
-            
             csvreader = csv.DictReader(file)
             for row in csvreader:
                 if len(row) == 0:
@@ -186,5 +185,70 @@ def import_from_csv():
         showinfo("Error", 'The file containing Missions data does not exist')
         er +=1
     return er
-                    
-                
+
+def import_poi_csv(filename):
+    er=0
+    try:
+        with open(filename, 'r') as file:
+            csvreader = csv.DictReader(file)
+            for row in csvreader:
+                if len(row) == 0:
+                    print("Nothing on this row")
+                else:
+                    coord = [i.strip() for i in row['coordinate'].split(',')]
+                    if row['area'] == 'False':
+                        lat = coord[0]
+                        long = coord[1]
+                        coordinate = (float(lat[1:]), float(long[:-1]))
+                    else:
+                        coordinate=[]
+                        for j in range(len(coord)):
+                            if j==0:
+                                lat = coord[0]
+                                long = coord[1]
+                                try:
+                                    float(lat[2:])
+                                    coordinate.append((float(lat[2:]), float(long[:-1])))
+                                except ValueError:
+                                    coordinate.append((float(lat[3:]), float(long[:-1]))) 
+                            elif j== len(coord)-2:
+                                lat = coord[j]
+                                long= coord[j+1]
+                                try:
+                                    float(long[:-2])
+                                    coordinate.append((float(lat[1:]), float(long[:-2])))
+                                except ValueError:
+                                    coordinate.append((float(lat[1:]), float(long[:-3])))
+                            elif j%2==0:
+                                lat = coord[j]
+                                long = coord[j+1]
+                                coordinate.append((float(lat[1:]), float(long[:-1])))
+                    print(len(coordinate))
+                    poi = init_poi(row['name'], coordinate, float(row['altitude']), row['color'], row['area'] == 'True')
+                    liste_poi.append(poi)
+            showinfo("Message", 'POI imported')
+    except FileNotFoundError:
+        showinfo("Error", 'The file containing POIs data does not exist')
+        er +=1
+    return er
+
+def import_gs_csv(filename):
+    er=0
+    try:
+        filename = simulation_folder / 'GS.csv'
+        with open(filename, 'r') as file:
+            csvreader = csv.DictReader(file)
+            for row in csvreader:
+                if len(row)==0:
+                    print("skip")
+                else:
+                    coor = [i.strip() for i in row['coordinate'].split(',')] 
+                    lat = coor[0]
+                    long = coor[1]
+                    gs = init_gs(row['name'], float(long[:-1]), float(lat[1:]), float(row['altitude']), float(row['elevation']), row['band'], float(row['debit']), row['color'])
+                    liste_gs.append(gs)
+            showinfo("Message", 'GS imported')
+    except FileNotFoundError:
+        showinfo("Error", 'The file containing GSs data does not exist')
+        er +=1
+    return er

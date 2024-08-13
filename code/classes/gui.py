@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
+from tkinter.filedialog import askopenfilename
 import tkintermapview as tkmap
+from satellite_tle import fetch_tle_from_celestrak
 import matplotlib.pyplot as plt
 from tkcalendar import DateEntry
 import numpy as np
@@ -11,9 +13,8 @@ from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
 from functions.calcul import calcul_traj, true_anomaly, simulation_time, calcul_swath
 from functions.save_data import save_to_csv
-from functions.import_data import import_from_csv
+from functions.import_data import import_from_csv, import_poi_csv, import_gs_csv
 from functions.country import get_country_name, get_poly_coordinate
-from satellite_tle import fetch_tle_from_celestrak
 from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
 from functions.save_result import save_gs_visibility, save_poi_visibility
 from functions.find_tm import centroid
@@ -182,7 +183,7 @@ class SatelliteSimulator(tk.Tk):
 
         ttk.Button(self.sat_frame, text="Add Satellite", command=self.add_satellite).grid(row=12, column=2, pady=10)
         ttk.Button(self.sat_frame, text="Modify Satellite", command=self.modify_satellite).grid(row=12, column=1, pady=10)
-        ttk.Button(self.sat_frame, text="Delete Satellite", command=self.add_satellite).grid(row=12, column=0, pady=10)
+        ttk.Button(self.sat_frame, text="Delete Satellite", command=self.delete_satellite).grid(row=12, column=0, pady=10)
         ttk.Button(self.sat_frame, text="Import TLE", command=self.openTLEwindow).grid(row=13, column=1, pady=10)
 
     def tab2(self):
@@ -226,7 +227,7 @@ class SatelliteSimulator(tk.Tk):
 
         ttk.Button(self.const_frame, text="Add Constellation", command=self.add_constellation).grid(row=7, column=2, pady=10)
         ttk.Button(self.const_frame, text="Modify Constellation", command=self.modify_constellation).grid(row=7, column=1, pady=10)
-        ttk.Button(self.const_frame, text="Delete Constellation", command=self.add_constellation).grid(row=7, column=0, pady=10)
+        ttk.Button(self.const_frame, text="Delete Constellation", command=self.delete_constellation).grid(row=7, column=0, pady=10)
 
     def tab3(self):
         self.poi_frame = ttk.LabelFrame(self.main_frame, text="Point of Interest Creation :", padding=(10, 10))
@@ -261,58 +262,60 @@ class SatelliteSimulator(tk.Tk):
 
         ttk.Button(self.poi_frame, text="Select Countries", command=self.area_by_country).grid(row=5, column=0, pady=10)
         ttk.Button(self.poi_frame, text="Draw area", command=self.area_by_hand).grid(row=5, column=1, pady=10)
-        ttk.Button(self.poi_frame, text="Choose mesh resoltuion", command=self.chooseres).grid(row=5, column=2, pady=10)
-        ttk.Button(self.poi_frame, text="Add POI", command=self.add_poi).grid(row=6, column=2, pady=10)
-        ttk.Button(self.poi_frame, text="Modify POI", command=self.modify_poi).grid(row=6, column=1, pady=10)
-        ttk.Button(self.poi_frame, text="Delete POI", command=self.add_poi).grid(row=6, column=0, pady=10)
+        ttk.Button(self.poi_frame, text="Choose mesh resolution", command=self.chooseres).grid(row=5, column=2, pady=10)
+        ttk.Button(self.poi_frame, text="Import POI", command=self.importpoi).grid(row=6, column=1, pady=10)
+        ttk.Button(self.poi_frame, text="Add POI", command=self.add_poi).grid(row=7, column=2, pady=10)
+        ttk.Button(self.poi_frame, text="Modify POI", command=self.modify_poi).grid(row=7, column=1, pady=10)
+        ttk.Button(self.poi_frame, text="Delete POI", command=self.delete_poi).grid(row=7, column=0, pady=10)
 
         self.l_gsn = ttk.Label(self.poi_frame, text="Name of the Ground Station : ")
-        self.l_gsn.grid(row=7, column=0, sticky="w")
+        self.l_gsn.grid(row=8, column=0, sticky="w")
         self.gs_name = ttk.Entry(self.poi_frame)
-        self.gs_name.grid(row=7, column=1, sticky="e")
+        self.gs_name.grid(row=8, column=1, sticky="e")
 
         self.l_gslat = ttk.Label(self.poi_frame, text="Latitude (DD) : ")
-        self.l_gslat.grid(row=8, column=0, sticky="w")
+        self.l_gslat.grid(row=9, column=0, sticky="w")
         self.gs_lat = ttk.Entry(self.poi_frame)
-        self.gs_lat.grid(row=8, column=1, sticky="e")
+        self.gs_lat.grid(row=9, column=1, sticky="e")
 
         self.l_gslong = ttk.Label(self.poi_frame, text="Longitude (DD) : ")
-        self.l_gslong.grid(row=9, column=0, sticky="w")
+        self.l_gslong.grid(row=10, column=0, sticky="w")
         self.gs_long = ttk.Entry(self.poi_frame)
-        self.gs_long.grid(row=9, column=1, sticky="e")
+        self.gs_long.grid(row=10, column=1, sticky="e")
 
         self.l_gsalt = ttk.Label(self.poi_frame, text="Altitude (m) : ")
-        self.l_gsalt.grid(row=10, column=0, sticky="w")
+        self.l_gsalt.grid(row=11, column=0, sticky="w")
         self.gs_alt = ttk.Entry(self.poi_frame)
-        self.gs_alt.grid(row=10, column=1, sticky="e")
+        self.gs_alt.grid(row=11, column=1, sticky="e")
 
         self.l_gsel = ttk.Label(self.poi_frame, text="Elevation (°) : ")
-        self.l_gsel.grid(row=11, column=0, sticky="w")
+        self.l_gsel.grid(row=12, column=0, sticky="w")
         self.gs_ele = ttk.Entry(self.poi_frame)
-        self.gs_ele.grid(row=11, column=1, sticky="e")
+        self.gs_ele.grid(row=12, column=1, sticky="e")
 
-        ttk.Label(self.poi_frame, text="Band : ").grid(row=12, column=0, sticky="w")
+        ttk.Label(self.poi_frame, text="Band : ").grid(row=13, column=0, sticky="w")
         self.combo_bande = ttk.Combobox(self.poi_frame)
-        self.combo_bande.grid(row=12, column=1, sticky="e")
+        self.combo_bande.grid(row=13, column=1, sticky="e")
         self.combo_bande['state'] = 'readonly'
         self.combo_bande.set(list_bande[0])
         self.combo_bande['values'] = list_bande
 
         self.l_gsdeb = ttk.Label(self.poi_frame, text="Debit (Mb/s) : ")
-        self.l_gsdeb.grid(row=13, column=0, sticky="w")
+        self.l_gsdeb.grid(row=14, column=0, sticky="w")
         self.gs_deb = ttk.Entry(self.poi_frame)
-        self.gs_deb.grid(row=13, column=1, sticky="e")
+        self.gs_deb.grid(row=14, column=1, sticky="e")
 
-        ttk.Label(self.poi_frame, text="Color : ").grid(row=14, column=0, sticky="w")
+        ttk.Label(self.poi_frame, text="Color : ").grid(row=15, column=0, sticky="w")
         self.combo_color_gs = ttk.Combobox(self.poi_frame)
-        self.combo_color_gs.grid(row=14, column=1, sticky="e")
+        self.combo_color_gs.grid(row=15, column=1, sticky="e")
         self.combo_color_gs['state'] = 'readonly'
         self.combo_color_gs.set(list_colors[0])
         self.combo_color_gs['values'] = list_colors
 
-        ttk.Button(self.poi_frame, text="Add Ground Station", command=self.add_gs).grid(row=15, column=2, pady=10)
-        ttk.Button(self.poi_frame, text="Modify Ground Station", command=self.modify_gs).grid(row=15, column=1, pady=10)   
-        ttk.Button(self.poi_frame, text="Delete Ground Station", command=self.add_gs).grid(row=15, column=0, pady=10)       
+        ttk.Button(self.poi_frame, text="Import Ground Station", command=self.importgs).grid(row=16, column=1, pady=10)
+        ttk.Button(self.poi_frame, text="Add Ground Station", command=self.add_gs).grid(row=17, column=2, pady=10)
+        ttk.Button(self.poi_frame, text="Modify Ground Station", command=self.modify_gs).grid(row=17, column=1, pady=10)   
+        ttk.Button(self.poi_frame, text="Delete Ground Station", command=self.delete_gs).grid(row=17, column=0, pady=10)       
 
     def tab5(self):
 
@@ -486,6 +489,9 @@ class SatelliteSimulator(tk.Tk):
                     liste_satellite[i].set_orbit(orb)
             showinfo("Message", "Satellite modified with success")
 
+    def delete_satellite(self):
+        showinfo("Message", "NOT IMPLEMENTED YET")
+
     def showsatelliteinfo(self, satname):
         for i in range(len(liste_satellite)):
             if liste_satellite[i].get_name() == satname:
@@ -596,6 +602,9 @@ class SatelliteSimulator(tk.Tk):
                             liste_constellation[i].set_model(liste_satellite[j])
             showinfo("Message", "Constellation modified with success")
 
+    def delete_constellation(self):
+        showinfo("Message", "NOT IMPLEMENTED YET")
+
     def showconstellationinfo(self, constname):
         for i in range(len(liste_constellation)):
             if liste_constellation[i].get_name() == constname:
@@ -679,6 +688,9 @@ class SatelliteSimulator(tk.Tk):
                     liste_poi[i].set_color(str(self.combo_color_poi.get()))
             showinfo("Message", "Point of interest modified with success")
 
+    def delete_poi(self):
+        showinfo("Message", "NOT IMPLEMENTED YET")
+
     def showpoiinfo(self, poiname):
         for i in range(len(liste_poi)):
             if liste_poi[i].get_name() == poiname:
@@ -689,6 +701,31 @@ class SatelliteSimulator(tk.Tk):
                 self.combo_color_poi.set(liste_poi[i].get_color())
         showinfo('Message', 'Done, to confirm the change, re-click on "Modify POI"')
         self.flag_mod_poi = True
+
+    def importpoi(self):
+        filename = askopenfilename(title="Choose a file containing POIs information", filetypes=[("CSV file", "*.csv")])
+        print(filename)
+        er = import_poi_csv(filename)
+        if er==0:
+            for i in range(len(liste_poi)):
+                if liste_poi[i].IsArea()== False:
+                    poi_marker = self.__map_widget.set_marker(liste_poi[i].get_coordinate(0)[0], liste_poi[i].get_coordinate(0)[1], text=liste_poi[i].get_name(), marker_color_outside=liste_poi[i].get_color())
+                else:
+                    poly = self.__map_widget.set_polygon(liste_poi[i].get_area(), outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name(), )
+            showinfo("Message", "POIs loaded succesfully")
+        else:
+            showinfo("Error", "Something went wrong !")
+        
+    def importgs(self):
+        filename = askopenfilename(title="Choose a file containing GSs information", filetypes=[("CSV file", "*.csv")])
+        print(filename)
+        er = import_gs_csv(filename)
+        if er==0:
+            for i in range(len(liste_gs)):
+                gs_marker = self.__map_widget.set_marker(liste_gs[i].get_coordinate()[0], liste_gs[i].get_coordinate()[1], text=liste_gs[i].get_name(), marker_color_outside=liste_gs[i].get_color())
+            showinfo("Message", "GSs loaded succesfully")
+        else:
+            showinfo("Error", "Something went wrong !")
 
     def add_gs(self):
         i=0
@@ -762,6 +799,9 @@ class SatelliteSimulator(tk.Tk):
                     liste_gs[i].set_debit(float(self.gs_deb.get()))
                     liste_gs[i].set_color(str(self.combo_color_gs.get()))
             showinfo("Message", "Ground Station modified with success")
+
+    def delete_gs(self):
+        showinfo("Message", "NOT IMPLEMENTED YET")
 
     def showgsinfo(self, gsname):
         for i in range(len(liste_gs)):
@@ -1245,7 +1285,7 @@ class SatelliteSimulator(tk.Tk):
         plt.show()
         save_poi_visibility(visibility)
 
-    def save_result(self):
+    def save_result(self, mission):
         pass
 
 #############################################################################################
@@ -1446,14 +1486,14 @@ class ResultChoiceWindow:
         self.l_poi_visibility.grid(row=2, column=0, sticky="w")
         ttk.Button(self.frame, text='Show', command=self.poi).grid(row=2, column=1, sticky="w")
 
-        self.l_result = ttk.Label(self.frame, text='Results')
-        self.l_result.grid(row=3, column=0, sticky="w")
-        ttk.Button(self.frame, text='Save', command=self.poi).grid(row=3, column=1, sticky="w")
+        #self.l_result = ttk.Label(self.frame, text='Results')
+        #self.l_result.grid(row=3, column=0, sticky="w")
+        ttk.Button(self.frame, text='Save Mission result', command=self.poi).grid(row=3, column=1, sticky="w")
 
     def gs(self):
         self.gs_visibility(self.miss, self.chosen_sat)
     def poi(self):
         self.poi_visibility(self.miss, self.chosen_sat)
     def save(self):
-        self.save_result()
+        self.save_result(self.miss)
         self.top.destroy()
