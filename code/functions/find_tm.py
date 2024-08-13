@@ -1,8 +1,6 @@
-from classes.poi import Point_of_interest
 import timezonefinder as tz
 import pytz
 import datetime
-from config import *
 
 def findtimezone(coord):
     """

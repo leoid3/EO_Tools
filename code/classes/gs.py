@@ -1,5 +1,3 @@
-from config import *
-
 class Ground_station:
     """
     Permet de creer une station sol.

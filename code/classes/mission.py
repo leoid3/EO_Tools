@@ -1,5 +1,3 @@
-from config import *
-
 class Mission:
     """
     Permet de creer une mission.

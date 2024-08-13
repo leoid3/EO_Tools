@@ -1,7 +1,6 @@
 import numpy as np
 from functions.coordinates_converter import eci_to_ecef
 from functions.find_tm import centroid
-from config import *
 
 def plot_ground_track(sat, times, ax, color, map):
     """

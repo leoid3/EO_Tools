@@ -1,5 +1,3 @@
-from config import *
-
 class Point_of_interest:
     """
     Permet de creer un point d'interet.

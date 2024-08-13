@@ -1,5 +1,3 @@
-from config import *
-
 class Constellation:
     """
     Permet de creer une constellation.

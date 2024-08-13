@@ -1,5 +1,3 @@
-from config import *
-
 def plot_orbit_3d(sat, ax, name, color, delta):
     """
     Visualise l'orbite en 3D.
