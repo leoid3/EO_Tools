@@ -16,7 +16,7 @@ from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv, import_poi_csv, import_gs_csv
 from functions.country import get_country_name, get_poly_coordinate
 from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
-from functions.save_result import save_gs_visibility, save_poi_visibility
+from functions.save_result import save_gs_visibility, save_poi_visibility, general_result
 from functions.find_tm import centroid
 from functions.sun_zenith_angle import sun_zenith_angle
 from functions.itur_model import get_attenuation
@@ -1286,7 +1286,7 @@ class SatelliteSimulator(tk.Tk):
         save_poi_visibility(visibility)
 
     def save_result(self, mission):
-        pass
+        general_result(mission)
 
 #############################################################################################
 # Additional windows
@@ -1488,7 +1488,7 @@ class ResultChoiceWindow:
 
         #self.l_result = ttk.Label(self.frame, text='Results')
         #self.l_result.grid(row=3, column=0, sticky="w")
-        ttk.Button(self.frame, text='Save Mission result', command=self.poi).grid(row=3, column=1, sticky="w")
+        ttk.Button(self.frame, text='Save Mission result', command=self.save).grid(row=3, column=1, sticky="w")
 
     def gs(self):
         self.gs_visibility(self.miss, self.chosen_sat)
