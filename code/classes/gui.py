@@ -76,6 +76,7 @@ class SatelliteSimulator(tk.Tk):
         self.comb_aff_sat.set('Choose a satellite...')
         self.comb_aff_sat.config(state='disable')
         ttk.Button(map_frame, text="Load", command=self.showsatonmap).pack(anchor="s")
+        ttk.Button(map_frame, text="Save mission result", command=self.save_result).pack(side="right")
 
         ttk.Button(map_frame, text="Satellite view", command=self.set_map_satellite).pack(side= "left")
         ttk.Button(map_frame, text="Map view", command=self.set_map_default).pack(side="left")
@@ -112,7 +113,7 @@ class SatelliteSimulator(tk.Tk):
             sat_pos = pos[-1]
             marker = self.__map_widget.set_marker(sat_pos[0], sat_pos[1], text=chosen_sat.get_name(), marker_color_outside=chosen_sat.get_color())
             self.satellite_marker.append(marker)
-            window = ResultChoiceWindow(self.gs_visibility, self.poi_visibility, self.save_result, miss, chosen_sat)
+            window = ResultChoiceWindow(self.gs_visibility, self.poi_visibility, miss, chosen_sat)
                  
     def tab1(self):
         # Frame for the satellite tab
@@ -387,7 +388,7 @@ class SatelliteSimulator(tk.Tk):
         
         self.control_frame.place(relx =0.38, rely= 0.88)
 
-        ttk.Label(self.control_frame, text="Mission : ").grid(row=0, column=1, sticky="w")
+        ttk.Label(self.control_frame, text="Mission : ").grid(row=0, column=0, sticky="w")
         self.combo_mission = ttk.Combobox(self.control_frame, postcommand= self.comb_miss_upd)
         self.combo_mission.grid(row=0, column=1, sticky="e")
         self.combo_mission['state'] = 'readonly'
@@ -1285,8 +1286,14 @@ class SatelliteSimulator(tk.Tk):
         plt.show()
         save_poi_visibility(visibility)
 
-    def save_result(self, mission):
-        general_result(mission)
+    def save_result(self):
+        for i in range(len(liste_mission)):
+                if liste_mission[i].get_name()==str(self.combo_mission.get()):
+                    mission = liste_mission[i]
+        if mission == None:
+            showinfo("Error", "Something went wrong ")
+        else:
+            general_result(mission)
 
 #############################################################################################
 # Additional windows
@@ -1465,13 +1472,12 @@ class ChooseResolutionWindow:
             self.top.destroy()
 
 class ResultChoiceWindow:
-    def __init__(self, gs_visibility, poi_visibility, save_result, miss, chosen_sat):
+    def __init__(self, gs_visibility, poi_visibility, miss, chosen_sat):
         self.top = tk.Toplevel()
         self.frame = tk.Frame(self.top)
         self.frame.pack(expand=True, fill='both', padx=10, pady=10)
         self.gs_visibility = gs_visibility
         self.poi_visibility = poi_visibility
-        self.save_result = save_result
         self.miss = miss
         self.chosen_sat = chosen_sat
 
@@ -1486,14 +1492,7 @@ class ResultChoiceWindow:
         self.l_poi_visibility.grid(row=2, column=0, sticky="w")
         ttk.Button(self.frame, text='Show', command=self.poi).grid(row=2, column=1, sticky="w")
 
-        #self.l_result = ttk.Label(self.frame, text='Results')
-        #self.l_result.grid(row=3, column=0, sticky="w")
-        ttk.Button(self.frame, text='Save Mission result', command=self.save).grid(row=3, column=1, sticky="w")
-
     def gs(self):
         self.gs_visibility(self.miss, self.chosen_sat)
     def poi(self):
         self.poi_visibility(self.miss, self.chosen_sat)
-    def save(self):
-        self.save_result(self.miss)
-        self.top.destroy()

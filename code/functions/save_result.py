@@ -226,7 +226,10 @@ def general_result(mission):
         elif any(keyword in formatted_text for keyword in plot_keywords):
             for keyword, image_path in plot_images.items():
                 if keyword in formatted_text:
-                    img = Image(image_path, width=600, height=300)
+                    if keyword == "3D orbit":
+                        img = Image(image_path, width=400, height=300)
+                    else:
+                        img = Image(image_path, width=600, height=300)
                     elements.append(img)
                 
         elif any(keyword in formatted_text for keyword in secondary_title):
