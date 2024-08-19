@@ -8,6 +8,7 @@ from functions.solver import runge_kutta_4, deriv
 from functions.orbit_3D import plot_orbit_3d, show_sat
 from functions.ground_track import plot_ground_track, show_gs_on_ground_track, show_poi_on_ground_track
 from functions.initialisation import init_orb, init_sat
+from functions.coordinates_converter import ECEF_to_ENU
 
 
 def calcul_traj(mission, map):
@@ -143,3 +144,57 @@ def calcul_swath(sat):
     equivalent_swath=2*(rigth_extension+swath_ext)
 
     return equivalent_swath
+
+def gs_interval(x, y, z, lat, long, ele, gsx, gsy, gsz, dt, time):
+    angle_list = []
+    interval = []
+    time_inter = []
+    for j in range(len(x)):
+        enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, gsx, gsy, gsz)
+        E, N, U = enu_vector
+        angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
+        angle_list.append(float(angle))
+            #Recupère le temps pour lequel angle>ele
+    for j in range(len(angle_list)):
+        if angle_list[j]>ele:
+            time_inter.append(time[j])
+                    
+            #Cree un tableau d'interval de temps
+    for j in range(len(time_inter) - 1):
+        if j == 0:
+            t0=time_inter[0]
+        if (time_inter[j+1]-time_inter[j])>dt:
+            tf = time_inter[j]
+            interval.append((t0, tf))
+            t0 = time_inter[j+1]
+        if j == len(time_inter) - 2:
+            tf = time_inter[j+1]
+            interval.append((t0, tf))
+    return interval, angle_list
+
+def poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time):
+    distance_list =[]
+    time_inter = []
+    angle_list = []
+    interval = []
+    for j in range(len(x)):
+        enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, poix, poiy, poiz)
+        E, N, U = enu_vector
+        angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
+        angle_list.append(float(angle))
+        distance = np.sqrt(E**2 + N**2)
+        distance_list.append(distance)
+    for j in range(len(angle_list)):
+        if (angle_list[j] > 0) and (distance_list[j] < swath):
+            time_inter.append(time[j])
+    for j in range(len(time_inter) - 1):
+        if j == 0:
+            t0=time_inter[0]
+        if (time_inter[j+1]-time_inter[j])>dt:
+            tf = time_inter[j]
+            interval.append((t0, tf))
+            t0 = time_inter[j+1]
+        if j == len(time_inter) - 2:
+            tf = time_inter[j+1]
+            interval.append((t0, tf))
+    return interval, angle_list  

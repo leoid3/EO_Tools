@@ -11,11 +11,11 @@ from datetime import timedelta, datetime
 
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
-from functions.calcul import calcul_traj, true_anomaly, simulation_time, calcul_swath
+from functions.calcul import calcul_traj, true_anomaly, simulation_time, calcul_swath, gs_interval, poi_interval
 from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv, import_poi_csv, import_gs_csv
 from functions.country import get_country_name, get_poly_coordinate
-from functions.coordinates_converter import latlong_to_cartesian, ECEF_to_ENU
+from functions.coordinates_converter import latlong_to_cartesian
 from functions.save_result import save_gs_visibility, save_poi_visibility, general_result
 from functions.find_tm import centroid
 from functions.sun_zenith_angle import sun_zenith_angle
@@ -97,7 +97,7 @@ class SatelliteSimulator(tk.Tk):
         for i in range(len(liste_mission)):
                 if liste_mission[i].get_name()==str(self.combo_mission.get()):
                     miss = liste_mission[i]
-                    cons = liste_mission[i].get_constellation()
+                    cons = miss.get_constellation()
                     for j in range(int(cons.get_walkerT())):
                         sat = cons.get_sat(j)
                         if (sat.get_name()) == str(self.comb_aff_sat.get()):
@@ -1111,9 +1111,7 @@ class SatelliteSimulator(tk.Tk):
                 time_in_days.append(datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(time[j])))
         
         for i in range(int(miss.get_nb_gs())):
-            angle_list = []
-            time_inter = []
-            interval = []
+            
             gs_visiblity_interval = []
             date_ini_list = []
             timedelta_list = []
@@ -1126,29 +1124,8 @@ class SatelliteSimulator(tk.Tk):
             band_att = get_attenuation(ele, gs.get_band(), lat, long)
             gsx, gsy, gsz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
-
-            #Convertit d'ECEF vers ENU
-            for j in range(len(x)):
-                enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, gsx, gsy, gsz)
-                E, N, U = enu_vector
-                angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
-                angle_list.append(float(angle))
-            #Recupère le temps pour lequel angle>ele
-            for j in range(len(angle_list)):
-                if angle_list[j]>ele:
-                    time_inter.append(time[j])
-                    
-            #Cree un tableau d'interval de temps
-            for j in range(len(time_inter) - 1):
-                if j == 0:
-                    t0=time_inter[0]
-                if (time_inter[j+1]-time_inter[j])>dt:
-                    tf = time_inter[j]
-                    interval.append((t0, tf))
-                    t0 = time_inter[j+1]
-                if j == len(time_inter) - 2:
-                    tf = time_inter[j+1]
-                    interval.append((t0, tf))
+            interval, angle_list = gs_interval(x, y, z, lat, long, ele, gsx, gsy, gsz, dt, time)
+            gs_visiblity_interval.append(interval)
 
             #Plot de l'angle d'élévation au cour du temps
             ax_2D.set_xlabel("Time (s)")
@@ -1160,7 +1137,7 @@ class SatelliteSimulator(tk.Tk):
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
-            gs_visiblity_interval.append(interval)
+            
             for k in range(len(gs_visiblity_interval)):
                 for j in range(len(gs_visiblity_interval[k])):
                     temp = gs_visiblity_interval[k][j]
@@ -1194,10 +1171,6 @@ class SatelliteSimulator(tk.Tk):
         for j in range(len(time)):
                 time_in_days.append(datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(time[j])))
         for i in range(int(miss.get_nb_poi())):
-            angle_list = []
-            distance_list = []
-            time_inter = []
-            interval = []
             poi_visiblity_interval = []
             date_ini_list = []
             timedelta_list = []
@@ -1214,28 +1187,7 @@ class SatelliteSimulator(tk.Tk):
             poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
             swath = calcul_swath(chosen_sat)*1000
-            #Convertit d'ECEF vers ENU
-            for j in range(len(x)):
-                enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, poix, poiy, poiz)
-                E, N, U = enu_vector
-                angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
-                angle_list.append(float(angle))
-                distance = np.sqrt(E**2 + N**2)
-                distance_list.append(distance)
-            for j in range(len(angle_list)):
-                if (angle_list[j] > 0) and (distance_list[j] < swath):
-                    time_inter.append(time[j])
-            for j in range(len(time_inter) - 1):
-                if j == 0:
-                    t0=time_inter[0]
-                if (time_inter[j+1]-time_inter[j])>dt:
-                    tf = time_inter[j]
-                    interval.append((t0, tf))
-                    t0 = time_inter[j+1]
-                if j == len(time_inter) - 2:
-                    tf = time_inter[j+1]
-                    interval.append((t0, tf))
-            
+            interval, angle_list = poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time)
             poi_visiblity_interval.append(interval)
             #Plot de l'angle d'élévation au cour du temps
             ax_2D.set_xlabel("Time (UTC)")
@@ -1293,7 +1245,53 @@ class SatelliteSimulator(tk.Tk):
         if mission == None:
             showinfo("Error", "Something went wrong ")
         else:
-            general_result(mission)
+            time = []
+            _, _, tf, dt = simulation_time(mission)
+            for i in range(0, int(tf+dt), int(dt)):
+                time.append(i)
+            const = mission.get_constellation()
+            poi = []
+            poi_opportunities = []
+            gs = []
+            gs_opportunities = []
+            sat = []
+            for i in range(mission.get_nb_poi()):
+                poi.append(mission.get_poi(i))
+            for i in range(mission.get_nb_gs()):
+                gs.append(mission.get_gs(i))
+            for i in range(const.get_nb_sat_tot()):
+                sat.append(const.get_sat(i))
+
+            for i in range(len(poi)):
+                poi_visibility = []
+                if poi[i].IsArea() == False:
+                    long = poi[i].get_coordinate(0)[1]
+                    lat =  poi[i].get_coordinate(0)[0]
+                else:
+                    long, lat = centroid(poi[i].get_area())
+                alt = poi[i].get_altitude()
+                poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
+
+                for j in range(len(sat)):
+                    x, y, z = sat[j].get_position_ecef()
+                    swath = calcul_swath(sat[j])*1000
+                    interval, _ = poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time)
+                    poi_visibility.append(( sat[j].get_name(), len(interval)))
+                poi_opportunities.append((poi[i].get_name(), poi_visibility))
+            
+            for i in range(len(gs)):
+                gs_visibility = []
+                lat, long = gs[i].get_coordinate()
+                alt = gs[i].get_altitude()
+                ele = gs[i].get_elevation()
+                gsx, gsy, gsz = latlong_to_cartesian(lat, long, alt)
+
+                for j in range(len(sat)):
+                    x, y, z = sat[j].get_position_ecef()
+                    interval, _ = gs_interval(x, y, z, lat, long, ele, gsx, gsy, gsz, dt, time)
+                    gs_visibility.append((sat[j].get_name(), len(interval)))
+                gs_opportunities.append((gs[i].get_name(), gs_visibility))
+            general_result(mission, gs_opportunities, poi_opportunities)
 
 #############################################################################################
 # Additional windows

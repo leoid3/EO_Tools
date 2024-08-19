@@ -6,7 +6,9 @@ matplotlib
 numpy
 pandas
 pvlib
+python_docx
 pytz
+reportlab
 satellitetle
 timezonefinder
 tkcalendar

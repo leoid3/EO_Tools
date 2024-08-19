@@ -5,11 +5,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
-import matplotlib.pyplot as plt
 import numpy as np
-import io
+import matplotlib.pyplot as plt
 from functions.calcul import simulation_time
 from functions.find_tm import centroid
+from functions.revisit import revisit_over_a_latitude
 
 def save_gs_visibility(result):
     if len(result) == 0:
@@ -31,7 +31,99 @@ def save_poi_visibility(result):
             csvwriter.writerow(resultfields_poi)
             csvwriter.writerows(result)
 
-def general_result(mission):
+def general_result(mission, gs_opportunities, poi_opportunities):
+    # Function to replace markup with actual values
+    def replace_placeholders(text, values):
+        for key, value in values.items():
+            if value== poi:
+                new_value =''
+                for i in range(len(value)):
+                    if i==0:
+                        temp = value[i]
+                        new_value ="- " + temp.get_name()
+                    else:
+                        temp = value[i]
+                        new_value =new_value + "<br></br>" + "- "+ temp.get_name()
+                text = text.replace(key, new_value)
+            elif value== gs:
+                new_value =''
+                for i in range(len(value)):
+                    if i==0:
+                        temp = value[i]
+                        new_value ="- " + temp.get_name()
+                    else:
+                        temp = value[i]
+                        new_value =new_value + "<br></br>" + "- "+ temp.get_name()
+                text = text.replace(key, new_value)
+            elif value== listpoi:
+                new_value =''
+                for i in range(len(value)):
+                    temp = value[i]
+                    if i==0:
+                        pass
+                    else:
+                        if temp.IsArea() == True:
+                            long, lat = centroid(temp.get_area())
+                        else:
+                            lat = temp.get_coordinate(0)[0]
+                            long = temp.get_coordinate(0)[1]
+                        number = poi_visi[i-1]
+                        if i == 1:
+                            new_value = temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Total number of times visible : " + str(number) + "<br></br>" + "Mean duration time : " + "XX" +" s" + "<br></br>"+ "<POIopportunities>" + "<br></br>"
+                        else:
+                            new_value = new_value + "<br></br>" + "Name of the point of interest : " + temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Total number of times visible : " + str(number) + "<br></br>" + "Mean duration time : " + "XX" +" s" + "<br></br>"+ "<POIopportunities>" + "<br></br>"
+                text = text.replace(key, new_value)
+            elif value == listegs:
+                new_value =''
+                for i in range(len(value)):
+                    temp = value[i]
+                    if i== 0:
+                        pass
+                    else:
+                        lat, long = temp.get_coordinate()
+                        number = gs_visi[i-1]
+                        if i == 1:
+                            new_value = temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Antenna characteristics :" + "<br></br>" + "- Elevation : " + str(temp.get_elevation()) + " °" + "<br></br>" + "- Band : " + temp.get_band() + "<br></br>" + "- Debit : " + str(temp.get_debit()) + " Mbps" + "<br></br>" + "Total number of opportunities : " + str(number) + "<br></br>" + "Mean duration time : " + "XX" + " s" + "<br></br>" + "Mean data size send/received : " + "XX" + " Mb" + "<br></br>" + "<GSopportunities>" + "<br></br>"
+                        else:
+                            new_value = new_value + "<br></br>" + "Name of the ground station : " + temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Antenna characteristics :" + "<br></br>" + "- Elevation : " + str(temp.get_elevation()) + " °" + "<br></br>" + "- Band : " + temp.get_band() + "<br></br>" + "- Debit : " + str(temp.get_debit()) + " Mbps" + "<br></br>" + "Total number of opportunities : " + str(number) + "<br></br>" + "Mean duration time : " + "XX" + " s" + "<br></br>" + "Mean data size send/received : " + "XX" + " Mb" + "<br></br>" + "<GSopportunities>" + "<br></br>"
+                text = text.replace(key, new_value)
+            else:
+                text = text.replace(key, value)
+        return text
+    
+    def plot_result(opportunities):
+        fig2d = plt.figure(figsize=(10, 6))
+        ax_2D = fig2d.add_subplot(111)
+        temp = opportunities
+        abscisse = []
+        ordonnees = []
+        for i in range(len(temp)):
+            if i== 0:
+                title = temp[0]
+            else:
+                for j in range(len(temp[i])):
+                    data = temp[i][j]
+                    abscisse.append(data[0])
+                    ordonnees.append(data[1])
+        ax_2D.bar(abscisse, ordonnees, width=0.35, color=list_colors, align='center')
+        ax_2D.set_title("Number of visibility per satellite at " + title)
+        ax_2D.legend()
+        fig2d.savefig(result_folder / f"Visibility at {title}.png", bbox_inches='tight')
+        img = Image(result_folder / f"Visibility at {title}.png", width=400, height=300)
+        return img
+    
+    def number_of_visibility(opportunities):
+        temp = opportunities
+        
+        total = 0
+        for i in range(len(temp)):
+            if i== 0:
+                pass
+            else:
+                for j in range(len(temp[i])):
+                    data = temp[i][j]
+                    total = total + data[1]
+        return total
     ##### Mission
     missionname = mission.get_name()
     missiontype = mission.get_type()
@@ -71,97 +163,45 @@ def general_result(mission):
     eccentricity = e
     period = 2*np.pi*np.sqrt((a**3)/mu)
     numberorbit = 86400/period
-    revisit0 = "XX"
-    revisit45="XX"
-    revisit60="XX"
     swath = satmodel.get_swath()
     depointing = satmodel.get_depoiting()
+    revisit0 = revisit_over_a_latitude(a, swath, depointing, 0, numbersat, incl)
+    revisit45=revisit_over_a_latitude(a, swath, depointing, 45, numbersat, incl)
+    revisit60=revisit_over_a_latitude(a, swath, depointing, 60, numbersat, incl)
 
     ##### POI
     listpoi = []
+    poi_visi = []
     listpoi.append("liste")
     for i in range(mission.get_nb_poi()):
         listpoi.append(mission.get_poi(i))
+    for i in range(len(poi_opportunities)):
+        data = number_of_visibility(poi_opportunities[i])
+        poi_visi.append(data)
 
     ##### GS
     listegs = []
+    gs_visi = []
     listegs.append("liste")
     for i in range(mission.get_nb_gs()):
         listegs.append(mission.get_gs(i))
+    for i in range(len(gs_opportunities)):
+        data = number_of_visibility(gs_opportunities[i])
+        gs_visi.append(data)
 
+
+    ##### Open the .docx report template
     doc = Document("Mission report Template.docx")
     text_elements = []
     for para in doc.paragraphs:
         text_elements.append(para.text)
 
-    # Function to replace XX with actual values
-    def replace_placeholders(text, values):
-        for key, value in values.items():
-            if value== poi:
-                new_value =''
-                for i in range(len(value)):
-                    if i==0:
-                        temp = value[i]
-                        new_value ="- " + temp.get_name()
-                    else:
-                        temp = value[i]
-                        new_value =new_value + "<br></br>" + "- "+ temp.get_name()
-                text = text.replace(key, new_value)
-            elif value== gs:
-                new_value =''
-                for i in range(len(value)):
-                    if i==0:
-                        temp = value[i]
-                        new_value ="- " + temp.get_name()
-                    else:
-                        temp = value[i]
-                        new_value =new_value + "<br></br>" + "- "+ temp.get_name()
-                text = text.replace(key, new_value)
-            elif value== listpoi:
-                new_value =''
-                for i in range(len(value)):
-                    temp = value[i]
-                    if i==0:
-                        pass
-                    else:
-                        if temp.IsArea() == True:
-                            long, lat = centroid(temp.get_area())
-                        else:
-                            lat = temp.get_coordinate(0)[0]
-                            long = temp.get_coordinate(0)[1]
-                        if i == 1:
-                            new_value = temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Total number of times visible : " + "XX" + "<br></br>" + "Mean duration time : " + "XX" +" s" + "<br></br>"
-                        else:
-                            new_value = new_value + "<br></br>" + "Name of the point of interest : " + temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Total number of times visible : " + "XX" + "<br></br>" + "Mean duration time : " + "XX" +" s" + "<br></br>"
-                text = text.replace(key, new_value)
-            elif value == listegs:
-                new_value =''
-                for i in range(len(value)):
-                    temp = value[i]
-                    if i== 0:
-                        pass
-                    else:
-                        lat, long = temp.get_coordinate()
-                        if i == 1:
-                            new_value = temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Antenna characteristics :" + "<br></br>" + "- Elevation : " + str(temp.get_elevation()) + " °" + "<br></br>" + "- Band : " + temp.get_band() + "<br></br>" + "- Debit : " + str(temp.get_debit()) + " Mbps" + "<br></br>" + "Total number of opportunities : " + "XX" + "<br></br>" + "Mean duration time : " + "XX" + " s" + "<br></br>" + "Mean data size send/received : " + "XX" + " Mb" + "<br></br>"
-                        else:
-                            new_value = new_value + "<br></br>" + "Name of the ground station : " + temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Antenna characteristics :" + "<br></br>" + "- Elevation : " + str(temp.get_elevation()) + " °" + "<br></br>" + "- Band : " + temp.get_band() + "<br></br>" + "- Debit : " + str(temp.get_debit()) + " Mbps" + "<br></br>" + "Total number of opportunities : " + "XX" + "<br></br>" + "Mean duration time : " + "XX" + " s" + "<br></br>" + "Mean data size send/received : " + "XX" + " Mb" + "<br></br>"
-                text = text.replace(key, new_value)
-            else:
-                text = text.replace(key, value)
-        return text
-
-    # Define specific keywords that indicate where plots should be inserted
-    plot_keywords = [
-        "Map with GS & POI",
-        "3D orbit",
-        "Ground track",
-    ]
-
     plot_images = {
         "Map with GS & POI" : result_folder / f"Ground Track of {missionname}.png",
         "3D orbit" : result_folder / f"Orbit of {missionname}.png",
         "Ground track" : result_folder / f"Ground Track of {missionname}.png",
+        "<GSopportunities>" : result_folder / f"Ground Track of {missionname}.png",
+        "<POIopportunities>" : result_folder / f"Ground Track of {missionname}.png"
     }
 
     # Define specific keywords that indicate titles and sections
@@ -222,30 +262,51 @@ def general_result(mission):
         
         # Check if the text matches any of the keywords that indicate a title
         if any(keyword in formatted_text for keyword in main_title):
-            elements.append(Paragraph(formatted_text, styles["maintitle"]))
-        elif any(keyword in formatted_text for keyword in plot_keywords):
-            for keyword, image_path in plot_images.items():
-                if keyword in formatted_text:
-                    if keyword == "3D orbit":
-                        img = Image(image_path, width=400, height=300)
-                    else:
-                        img = Image(image_path, width=600, height=300)
-                    elements.append(img)
-                
+            elements.append(Paragraph(formatted_text, styles["maintitle"]))   
         elif any(keyword in formatted_text for keyword in secondary_title):
             elements.append(PageBreak())
             elements.append(Paragraph(formatted_text, styles["secondarytitle"]))
         else:
-            elements.append(Paragraph(formatted_text, styles["body"]))
-        
+            passed = 0
+            
+            for keyword, image_path in plot_images.items():
+                if keyword in formatted_text:
+                    if keyword == "3D orbit":
+                        img = Image(image_path, width=400, height=300)
+                        elements.append(img)
+                        passed = 1
+                    elif keyword == "<GSopportunities>":
+                        parts = formatted_text.split("<GSopportunities>")
+                        for i, part in enumerate(parts):
+                            if i<len(parts)-1:
+                                elements.append(Paragraph(part, styles["body"]))
+                                img = plot_result(gs_opportunities[i])
+                                elements.append(img)
+                        passed = 1
+                        break
+                    elif keyword == "<POIopportunities>":
+                        parts = formatted_text.split("<POIopportunities>")
+                        for i, part in enumerate(parts):
+                            if i<len(parts)-1:
+                                elements.append(Paragraph(part, styles["body"]))
+                                img = plot_result(poi_opportunities[i])
+                                elements.append(img)
+                        passed = 1
+                        break
+                    else:
+                        img = Image(image_path, width=600, height=300)
+                        elements.append(img)
+                        passed = 1
+            if passed == 0:
+                elements.append(Paragraph(formatted_text, styles["body"]))
+                    
+            
         elements.append(Spacer(1, 12))
 
     # Build PDF
     pdf.build(elements)
 
     # Output the path to the generated PDF
-    print(f"PDF created successfully: {pdf_filename}")
+    print(f"PDF created successfully: {pdf_filename}") 
 
-    
-
-    
+  
