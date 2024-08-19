@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 from tkinter.filedialog import askopenfilename
+import matplotlib
+matplotlib.use("TkAgg")
 import tkintermapview as tkmap
 from satellite_tle import fetch_tle_from_celestrak
 import matplotlib.pyplot as plt

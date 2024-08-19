@@ -1,4 +1,7 @@
 import numpy as np
+from tkinter import *
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from config import *
