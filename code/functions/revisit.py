@@ -12,7 +12,7 @@ def revisit_over_a_latitude(a, swath_width, depointing, lat_target, nb_sat, incl
     equivalent_swath=2*(right_extension+swath_ext)
     nb_orbit= 86400/(2*np.pi*np.sqrt((a**3)/mu))
     peri = 2*np.pi*earth_radius/1000
-    revisit_per_day = (nb_sat*nb_orbit*equivalent_swath)/(peri*np.cos(np.deg2rad(lat_target))*np.cos(np.deg2rad(inclination)))
+    revisit_per_day = (nb_sat*nb_orbit*equivalent_swath)/(peri*np.cos(np.deg2rad(lat_target)))
     
     return revisit_per_day
 
