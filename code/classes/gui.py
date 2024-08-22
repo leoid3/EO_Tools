@@ -1159,9 +1159,9 @@ class SatelliteSimulator(tk.Tk):
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
-            fig2d.savefig(result_folder / f"Result {gs.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
+            fig2d.savefig(result_folder / miss.get_name() / f"Result {gs.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
         plt.show()
-        save_gs_visibility(visibility)
+        save_gs_visibility(visibility, miss.get_name())
 
     def poi_visibility(self, miss, chosen_sat):
         time = []
@@ -1235,10 +1235,10 @@ class SatelliteSimulator(tk.Tk):
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
-            fig2d.savefig(result_folder / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
+            fig2d.savefig(result_folder / miss.get_name() / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
         
         plt.show()
-        save_poi_visibility(visibility)
+        save_poi_visibility(visibility, miss.get_name())
 
     def save_result(self):
         for i in range(len(liste_mission)):

@@ -5,7 +5,7 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from config import *
-import time
+import time, os
 from functions.oe_to_sv import orbital_elements_to_state_vectors
 from functions.solver import runge_kutta_4, deriv
 from functions.orbit_3D import plot_orbit_3d, show_sat
@@ -95,8 +95,12 @@ def calcul_traj(mission, map):
     ax_3D.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax_3D.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-    fig2d.savefig(result_folder / f"Ground Track of {mission.get_name()}.png", bbox_inches='tight')
-    fig3d.savefig(result_folder / f"Orbit of {mission.get_name()}.png", bbox_inches='tight')
+    mission_folder = result_folder / mission.get_name()
+    if not os.path.exists(mission_folder):
+        os.makedirs(mission_folder)
+
+    fig2d.savefig(mission_folder / f"Ground Track of {mission.get_name()}.png", bbox_inches='tight')
+    fig3d.savefig(mission_folder / f"Orbit of {mission.get_name()}.png", bbox_inches='tight')
 
     plt.show()
 

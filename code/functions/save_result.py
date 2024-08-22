@@ -11,21 +11,21 @@ from functions.calcul import simulation_time
 from functions.find_tm import centroid
 from functions.revisit import revisit_over_a_latitude
 
-def save_gs_visibility(result):
+def save_gs_visibility(result, name):
     if len(result) == 0:
         print("NO OPPORTUNITIES")
     else:
-        filename = result_folder / f"Result Ground Station visibility ({result[0][0]}).csv"
+        filename = result_folder / name / f"Result Ground Station visibility ({result[0][0]}).csv"
         with open(filename, 'w') as csvfile:
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow(resultfields_gs)
             csvwriter.writerows(result)
 
-def save_poi_visibility(result):
+def save_poi_visibility(result, name):
     if len(result) == 0:
         print("NO OPPORTUNITIES")
     else:
-        filename = result_folder / f"Result POI visibility ({result[0][0]}).csv"
+        filename = result_folder / name / f"Result POI visibility ({result[0][0]}).csv"
         with open(filename, 'w') as csvfile:
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow(resultfields_poi)
@@ -108,8 +108,8 @@ def general_result(mission, gs_opportunities, poi_opportunities):
         ax_2D.bar(abscisse, ordonnees, width=0.35, color=list_colors, align='center')
         ax_2D.set_title("Number of visibility per satellite at " + title)
         ax_2D.legend()
-        fig2d.savefig(result_folder / f"Visibility at {title}.png", bbox_inches='tight')
-        img = Image(result_folder / f"Visibility at {title}.png", width=400, height=300)
+        fig2d.savefig(result_folder / mission.get_name() / f"Visibility at {title}.png", bbox_inches='tight')
+        img = Image(result_folder / mission.get_name() / f"Visibility at {title}.png", width=400, height=300)
         return img
     
     def number_of_visibility(opportunities):
@@ -197,9 +197,9 @@ def general_result(mission, gs_opportunities, poi_opportunities):
         text_elements.append(para.text)
 
     plot_images = {
-        "Map with GS & POI" : result_folder / f"Ground Track of {missionname}.png",
-        "3D orbit" : result_folder / f"Orbit of {missionname}.png",
-        "Ground track" : result_folder / f"Ground Track of {missionname}.png",
+        "Map with GS & POI" : result_folder / mission.get_name() / f"Ground Track of {missionname}.png",
+        "3D orbit" : result_folder / mission.get_name() / f"Orbit of {missionname}.png",
+        "Ground track" : result_folder / mission.get_name() / f"Ground Track of {missionname}.png",
         "<GSopportunities>" : result_folder / f"Ground Track of {missionname}.png",
         "<POIopportunities>" : result_folder / f"Ground Track of {missionname}.png"
     }
@@ -251,7 +251,7 @@ def general_result(mission, gs_opportunities, poi_opportunities):
     styles.add(ParagraphStyle(name='body',fontSize=12, leading=16))
 
     # Create the PDF document with enhanced formatting
-    pdf_filename = "Mission Report.pdf"
+    pdf_filename = f"Mission Report for {mission.get_name()}.pdf"
     pdf = SimpleDocTemplate(pdf_filename, pagesize=A4)
 
     elements = []
