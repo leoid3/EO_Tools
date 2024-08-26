@@ -20,7 +20,7 @@ from functions.country import get_country_name, get_poly_coordinate
 from functions.coordinates_converter import latlong_to_cartesian
 from functions.save_result import save_gs_visibility, save_poi_visibility, general_result
 from functions.find_tm import centroid
-from functions.sun_zenith_angle import sun_zenith_angle
+from functions.sza import sun_zenith_angle
 from functions.itur_model import get_attenuation
 
 #############################################################################################
