@@ -11,9 +11,6 @@ com_prot = 0.15 #https://www.techniques-ingenieur.fr/base-documentaire/technolog
 error_correction = 0.1 #https://cours.zaretti.be/courses/coding/algo/lessons/controle-derreur-crc-parite-etc/?action=register
 noise = 0.025 #https://cel.hal.science/cel-00156394/file/cours.pdf
 eff_ini = (1-com_prot)*(1-error_correction)*(1-noise)
-#### TO ADD IN GUI ####
-antenna_dia = 1 
-########################
 
 #Listes données
 liste_satellite = []
@@ -35,7 +32,7 @@ world = gpd.read_file(path_to_shapefile)
 simulation_folder = Path("simulation_data/")
 mission_fields = ['name', 'starttime', 'endtime', 'timestep', 'type', 'minsza', 'poi', 'gs', 'constellation']
 poi_fields = ['name', 'coordinate', 'altitude','color', 'timezone', 'sza', 'area']
-gs_fields =['name', 'coordinate', 'altitude', 'elevation', 'band', 'debit', 'color']
+gs_fields =['name', 'coordinate', 'altitude', 'elevation','antenna', 'band', 'debit', 'color']
 cons_fields =['name', 'walkerT', 'walkerP', 'walkerF', 'satmodel', 'color']
 sat_fields =['name', 'swath', 'depointing', 'type', 'color', 'orbit']
 

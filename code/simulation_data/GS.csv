@@ -1,6 +1,6 @@
-name,coordinate,altitude,elevation,band,debit,color
+name,coordinate,altitude,elevation,band,debit,antenna,color
 
-Vladivostok,"(43.0, 139.0)",120.0,8.0,Ku,10,purple
+Vladivostok,"(43.0, 139.0)",120.0,8.0,Ku,10,1,purple
 
-Bengaluru,"(27.574329814070964, 78.99782306243969)",200.0,8.0,Ka,10,yellow
+Bengaluru,"(27.574329814070964, 78.99782306243969)",200.0,8.0,Ka,10,3,yellow
 

@@ -291,34 +291,39 @@ class SatelliteSimulator(tk.Tk):
         self.gs_alt = ttk.Entry(self.poi_frame)
         self.gs_alt.grid(row=11, column=1, sticky="e")
 
-        self.l_gsel = ttk.Label(self.poi_frame, text="Elevation (°) : ")
-        self.l_gsel.grid(row=12, column=0, sticky="w")
-        self.gs_ele = ttk.Entry(self.poi_frame)
-        self.gs_ele.grid(row=12, column=1, sticky="e")
+        self.l_gsant = ttk.Label(self.poi_frame, text="Antenna's diameter (m) : ")
+        self.l_gsant.grid(row=12, column=0, sticky="w")
+        self.gs_ant = ttk.Entry(self.poi_frame)
+        self.gs_ant.grid(row=12, column=1, sticky="e")
 
-        ttk.Label(self.poi_frame, text="Band : ").grid(row=13, column=0, sticky="w")
+        self.l_gsel = ttk.Label(self.poi_frame, text="Elevation (°) : ")
+        self.l_gsel.grid(row=13, column=0, sticky="w")
+        self.gs_ele = ttk.Entry(self.poi_frame)
+        self.gs_ele.grid(row=13, column=1, sticky="e")
+
+        ttk.Label(self.poi_frame, text="Band : ").grid(row=14, column=0, sticky="w")
         self.combo_bande = ttk.Combobox(self.poi_frame)
-        self.combo_bande.grid(row=13, column=1, sticky="e")
+        self.combo_bande.grid(row=14, column=1, sticky="e")
         self.combo_bande['state'] = 'readonly'
         self.combo_bande.set(list_bande[0])
         self.combo_bande['values'] = list_bande
 
         self.l_gsdeb = ttk.Label(self.poi_frame, text="Debit (Mb/s) : ")
-        self.l_gsdeb.grid(row=14, column=0, sticky="w")
+        self.l_gsdeb.grid(row=15, column=0, sticky="w")
         self.gs_deb = ttk.Entry(self.poi_frame)
-        self.gs_deb.grid(row=14, column=1, sticky="e")
+        self.gs_deb.grid(row=15, column=1, sticky="e")
 
-        ttk.Label(self.poi_frame, text="Color : ").grid(row=15, column=0, sticky="w")
+        ttk.Label(self.poi_frame, text="Color : ").grid(row=16, column=0, sticky="w")
         self.combo_color_gs = ttk.Combobox(self.poi_frame)
-        self.combo_color_gs.grid(row=15, column=1, sticky="e")
+        self.combo_color_gs.grid(row=16, column=1, sticky="e")
         self.combo_color_gs['state'] = 'readonly'
         self.combo_color_gs.set(list_colors[0])
         self.combo_color_gs['values'] = list_colors
 
-        ttk.Button(self.poi_frame, text="Import Ground Station", command=self.importgs).grid(row=16, column=1, pady=10)
-        ttk.Button(self.poi_frame, text="Add Ground Station", command=self.add_gs).grid(row=17, column=2, pady=10)
-        ttk.Button(self.poi_frame, text="Modify Ground Station", command=self.modify_gs).grid(row=17, column=1, pady=10)   
-        ttk.Button(self.poi_frame, text="Delete Ground Station", command=self.delete_gs).grid(row=17, column=0, pady=10)       
+        ttk.Button(self.poi_frame, text="Import Ground Station", command=self.importgs).grid(row=17, column=1, pady=10)
+        ttk.Button(self.poi_frame, text="Add Ground Station", command=self.add_gs).grid(row=18, column=2, pady=10)
+        ttk.Button(self.poi_frame, text="Modify Ground Station", command=self.modify_gs).grid(row=18, column=1, pady=10)   
+        ttk.Button(self.poi_frame, text="Delete Ground Station", command=self.delete_gs).grid(row=18, column=0, pady=10)       
 
     def tab5(self):
 
@@ -757,6 +762,11 @@ class SatelliteSimulator(tk.Tk):
             i=+1
         else:
             self.l_gsel.config(foreground = "green")
+        if self.validate_entry(self.gs_ant.get())== False:
+            self.l_gsant.config(foreground = "red")
+            i=+1
+        else:
+            self.l_gsant.config(foreground = "green")
         if self.validate_entry(self.gs_deb.get())== False:
             self.l_gsdeb.config(foreground = "red")
             i=+1
@@ -777,6 +787,7 @@ class SatelliteSimulator(tk.Tk):
                            float(self.gs_ele.get()),
                            str(self.combo_bande.get()),
                            float(self.gs_deb.get()),
+                           float(self.gs_ant.get()),
                            str(self.combo_color_gs.get()))
             liste_gs.append(gs)
             print("Ground Station ajoutée avec succes")
@@ -800,6 +811,7 @@ class SatelliteSimulator(tk.Tk):
                     liste_gs[i].set_elevation(float(self.gs_ele.get()))
                     liste_gs[i].set_bandwidth(float(self.gs_bw.get()))
                     liste_gs[i].set_debit(float(self.gs_deb.get()))
+                    liste_gs[i].set_antenna(float(self.gs_ant.get()))
                     liste_gs[i].set_color(str(self.combo_color_gs.get()))
             showinfo("Message", "Ground Station modified with success")
 
@@ -817,6 +829,7 @@ class SatelliteSimulator(tk.Tk):
                 self.gs_ele.insert(0, liste_gs[i].get_elevation())
                 self.gs_bw.insert(0, liste_gs[i].get_bandwidth())
                 self.gs_deb.insert(0, liste_gs[i].get_debit())
+                self.gs_ant.insert(0, liste_gs[i].get_antenna())
                 self.combo_color_gs.set(liste_gs[i].get_color())
         showinfo('Message', 'Done, to confirm the change, re-click on "Modify Ground Station"')
         self.flag_mod_const = True
@@ -1123,7 +1136,8 @@ class SatelliteSimulator(tk.Tk):
             lat, long = gs.get_coordinate()
             alt = gs.get_altitude()
             ele = gs.get_elevation()
-            band_att = get_attenuation(ele, gs.get_band(), lat, long)
+            ant = gs.get_antenna()
+            band_att = get_attenuation(ele, gs.get_band(), lat, long, ant)
             gsx, gsy, gsz = latlong_to_cartesian(lat, long, alt)
             x, y, z = chosen_sat.get_position_ecef()
             interval, angle_list = gs_interval(x, y, z, lat, long, ele, gsx, gsy, gsz, dt, time)
@@ -1155,7 +1169,7 @@ class SatelliteSimulator(tk.Tk):
             ax_2D_2.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.35, color=list_colors, align='center')
             ax_2D_2.set_ylabel('Times (s)')
             ax_2D_2.legend()
-            plt.title(f"Windows opoortunities duration at {gs.get_name()}")
+            plt.title(f"Window opportunities duration at {gs.get_name()}")
             plt.grid(True)
             plt.xticks(rotation=45)
             plt.tight_layout()
@@ -1205,7 +1219,7 @@ class SatelliteSimulator(tk.Tk):
             #Plot l'élévation du soleil sur le point d'interet au cour du temps
             ax_2D_2 = fig2d.add_subplot(312)
             ax_2D_2.plot(zenith_time, zenith_angle['elevation'], label='Sun zenith angle', color='blue')
-            ax_2D_2.plot(time_in_days, np.full((len(time_in_days), 1), (float(miss.get_minsza()))) , label=f"Minimum sun elevation ({float(miss.get_minsza())}°) to be seen for the mission", color='black')
+            ax_2D_2.plot(time_in_days, np.full((len(time_in_days), 1), (float(miss.get_minsza()))) , label=f"Minimum sun elevation ({float(miss.get_minsza())}°) for the mission", color='black')
             ax_2D_2.set_xlabel('Times (UTC)')
             ax_2D_2.set_ylabel('Sun elevation angle (°)')
             ax_2D_2.legend()

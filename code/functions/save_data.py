@@ -66,6 +66,7 @@ def save_to_csv(lm, lc, lgs, lpoi, ls):
              lgs[i].get_elevation(),
              lgs[i].get_band(),
              lgs[i].get_debit(),
+             lgs[i].get_antenna(),
              lgs[i].get_color()]
         GS_data.append(gs)
     filename = simulation_folder / "GS.csv"

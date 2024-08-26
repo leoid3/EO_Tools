@@ -43,11 +43,11 @@ def init_poi(name, coord, alt, color, area):
                 poi.set_coordinate(coord[i][0], coord[i][1])
     return poi
 
-def init_gs(name, long, lat, alt, ele, band, deb, color):
+def init_gs(name, long, lat, alt, ele, band, deb, antenna, color):
     """
     Permet d'initialiser les stations sol.
     """
-    gs = Ground_station(name, lat, long, alt, ele, band, deb, color)
+    gs = Ground_station(name, lat, long, alt, ele, band, deb, antenna, color)
     return gs
 
 def init_mission(name, ts, ti, te, type, sza, lst_poi, lst_gs, const, dp = False):

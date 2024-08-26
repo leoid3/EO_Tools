@@ -2,13 +2,14 @@ class Ground_station:
     """
     Permet de creer une station sol.
     """
-    def __init__(self, n, lat, long, alt, e, bw, d, c):
+    def __init__(self, n, lat, long, alt, e, bw, d, ant, c):
         self.__name = n
         self.__latitude = lat
         self.__longitude = long
         self.__elevation = e
         self.__band = bw
         self.__debit = d
+        self.__antenna = ant
         self.__altitude = alt
         self.__color = c
     
@@ -27,8 +28,10 @@ class Ground_station:
         self.__altitude = alt
     def set_debit(self, d):
         self.__debit = d
-    def get_color(self, c):
+    def set_color(self, c):
         self.__color = c
+    def set_antenna(self, a):
+        self.__antenna = a
     
     #Accesseurs
     def get_name(self):
@@ -45,3 +48,5 @@ class Ground_station:
         return self.__debit
     def get_color(self):
         return self.__color
+    def get_antenna(self):
+        return self.__antenna

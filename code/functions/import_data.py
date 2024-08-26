@@ -67,7 +67,7 @@ def import_from_csv():
                     coor = [i.strip() for i in row['coordinate'].split(',')] 
                     lat = coor[0]
                     long = coor[1]
-                    gs = init_gs(row['name'], float(long[:-1]), float(lat[1:]), float(row['altitude']), float(row['elevation']), row['band'], float(row['debit']), row['color'])
+                    gs = init_gs(row['name'], float(long[:-1]), float(lat[1:]), float(row['altitude']), float(row['elevation']), row['band'], float(row['debit']),float(row['antenna']), row['color'])
                     liste_gs.append(gs)
             showinfo("Message", 'GS imported')
     except FileNotFoundError:
