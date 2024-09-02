@@ -1119,7 +1119,7 @@ class SatelliteSimulator(tk.Tk):
         time = []
         time_in_days = []
         visibility = []
-        _, t0, tf, dt = simulation_time(miss)
+        _, _, tf, dt = simulation_time(miss)
         for i in range(0, int(tf+dt), int(dt)):
             time.append(i)
         for j in range(len(time)):
@@ -1181,7 +1181,7 @@ class SatelliteSimulator(tk.Tk):
         time = []
         time_in_days = []
         visibility= []
-        _, t0, tf, dt = simulation_time(miss)
+        _, _, tf, dt = simulation_time(miss)
         for i in range(0, int(tf+dt), int(dt)):
             time.append(i)
         for j in range(len(time)):

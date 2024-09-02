@@ -44,5 +44,5 @@ resultfields_poi =[f'Satellite name', 'POI name', 'Start time (UTC)', 'Stop time
 #Listes pour l'IHM
 list_colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
 sat_type = ['SAR', 'EO']
-list_bande = ['L', 'S', 'C', 'X', 'Ku', 'Ka']
+list_bande = ['VHF', 'UHF', 'L', 'S', 'C', 'X', 'Ku','K', 'Ka', 'V']
 
