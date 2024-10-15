@@ -408,39 +408,17 @@ class SatelliteSimulator(tk.Tk):
        
     def add_satellite(self):
         i=0
-        if self.validate_entry(self.altitude.get()) == False:
-            self.l_a.config(foreground = "red")
+        if len(self.sat_name.get())== 0:
+            self.l_sn.config(foreground = "red")
             i=+1
         else:
-            self.l_a.config(foreground = "green")
-        if self.validate_entry(self.eccentricity.get())== False:
-            self.l_e.config(foreground = "red")
-            i=+1
-        else:
-            self.l_e.config(foreground = "green")
-        if self.validate_entry(self.inclination.get())== False:
-            self.l_i.config(foreground = "red")
-            i=+1
-        else:
-            self.l_i.config(foreground = "green")
-        if self.validate_entry(self.raan.get())== False:
-            self.l_raan.config(foreground = "red")
-            i=+1
-        else:
-            self.l_raan.config(foreground = "green")
-        if self.validate_entry(self.arg_perigee.get())== False:
-            self.l_ap.config(foreground = "red")
-            i=+1
-        else:
-            self.l_ap.config(foreground = "green")
-        if self.validate_entry(self.true_anomaly.get())== False:
-            self.l_ta.config(foreground = "red")
-            i=+1
-        else:
-            self.l_ta.config(foreground = "green")
-
+            self.l_sn.config(foreground = "green")
         if self.validate_entry(self.sat_swath.get())== False:
             self.l_sw.config(foreground = "red")
+            i=+1
+        elif float(self.sat_swath.get()) < 0:
+            self.l_sw.config(foreground = "orange")
+            showinfo("Message", "The satellite's swath must be positive !")
             i=+1
         else:
             self.l_sw.config(foreground = "green")
@@ -448,13 +426,68 @@ class SatelliteSimulator(tk.Tk):
         if self.validate_entry(self.sat_dep.get())== False:
             self.l_dep.config(foreground = "red")
             i=+1
-        else:
-            self.l_dep.config(foreground = "green")
-        if len(self.sat_name.get())== 0:
-            self.l_sn.config(foreground = "red")
+        elif float(self.sat_dep.get()) < 0 or float(self.sat_dep.get()) > 45:
+            self.l_dep.config(foreground = "orange")
+            showinfo("Message", "The satellite's depointing must be positbetween 0° and 45° !")
             i=+1
         else:
-            self.l_sn.config(foreground = "green")
+            self.l_dep.config(foreground = "green")
+        
+        if self.validate_entry(self.altitude.get()) == False:
+            self.l_a.config(foreground = "red")
+            i=+1
+        elif float(self.altitude.get()) <= 200:
+            showinfo("Message", "The altitude must be higher than 200km !")
+            self.l_a.config(foreground = "orange")
+            i=+1
+        else:
+            self.l_a.config(foreground = "green")
+        if self.validate_entry(self.eccentricity.get())== False:
+            self.l_e.config(foreground = "red")
+            i=+1
+        elif float(self.eccentricity.get()) < 0 or float (self.eccentricity.get()) >= 1:
+            showinfo("Message", "The eccentricity must be between 0 and 1 !")
+            self.l_e.config(foreground = "orange")
+            i=+1
+        else:
+            self.l_e.config(foreground = "green")
+        if self.validate_entry(self.inclination.get())== False:
+            self.l_i.config(foreground = "red")
+            i=+1
+        elif float(self.inclination.get()) < 0 or float(self.inclination.get()) > 180:
+            showinfo("Message", "The inclination must be between 0° and 180° !")
+            self.l_i.config(foreground = "orange")
+            i=+1
+        else:
+            self.l_i.config(foreground = "green")
+        if self.validate_entry(self.raan.get())== False:
+            self.l_raan.config(foreground = "red")
+            i=+1
+        elif float(self.raan.get()) < 0 or float(self.raan.get()) > 360:
+            self.l_raan.config(foreground = "orange")
+            showinfo("Message", "The RAAN must be between 0° and 360° !")
+            i=+1
+        else:
+            self.l_raan.config(foreground = "green")
+        if self.validate_entry(self.arg_perigee.get())== False:
+            self.l_ap.config(foreground = "red")
+            i=+1
+        elif float(self.arg_perigee.get()) < 0 or float(self.arg_perigee.get()) > 360:
+            self.l_ap.config(foreground = "orange")
+            showinfo("Message", "The argument of perigee must be between 0° and 360° !")
+            i=+1
+        else:
+            self.l_ap.config(foreground = "green")
+        if self.validate_entry(self.true_anomaly.get())== False:
+            self.l_ta.config(foreground = "red")
+            i=+1
+        elif float(self.true_anomaly.get()) < 0 or float(self.true_anomaly.get()) > 360:
+            self.l_ta.config(foreground = "orange")
+            showinfo("Message", "The true anomaly must be between 0° and 360° !")
+            i=+1
+        else:
+            self.l_ta.config(foreground = "green")
+
         if i==0:
             orb = init_orb(float(self.altitude.get()),
                             float(self.eccentricity.get()),
@@ -469,10 +502,10 @@ class SatelliteSimulator(tk.Tk):
                            str(self.combo_type.get()), orb)
             liste_satellite.append(sat)
             self.flag_mod_sat = False
-            showinfo("Message", "Satellite ajouté avec succès !")
+            showinfo("Message", "Satellite added successfully !")
             [widget.delete(0, tk.END) for widget in self.sat_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
-            showinfo("Error", "Un ou plusieurs parametres sont manquants")
+            showinfo("Error", "One or more parameters are incorrect !")
 
     def modify_satellite(self):
         if self.flag_mod_sat == False:
@@ -551,28 +584,41 @@ class SatelliteSimulator(tk.Tk):
         
     def add_constellation(self):
         i=0
+        if len(self.const_name.get())== 0:
+            self.l_consn.config(foreground = "red")
+            i=+1
+        else:
+            self.l_consn.config(foreground = "green")
+        if self.validate_entry(self.walkerT.get())== False:
+            self.l_walkerT.config(foreground = "red")
+            i=+1
+        elif float(self.walkerT.get()) <= 0:
+            self.l_walkerT.config(foreground = "orange")
+            showinfo("Message", "The number of satellites must be positive")
+            i=+1
+        else:
+            self.l_walkerT.config(foreground = "green")
         if self.validate_entry(self.walkerP.get()) == False:
             self.l_walkerP.config(foreground = "red")
+            i=+1
+        elif float(self.walkerP.get()) <= 0:
+            self.l_walkerP.config(foreground = "orange")
+            showinfo("Message", "The number of orbital planes must be positive")
             i=+1
         else:
             self.l_walkerP.config(foreground = "green")
         if self.validate_entry(self.walkerF.get())== False:
             self.l_walkerF.config(foreground = "red")
             i=+1
+        elif float(self.walkerF.get()) < 0:
+            self.l_walkerF.config(foreground = "orange")
+            showinfo("Message", "The phasing factor must be positive")
+            i=+1
         else:
             self.l_walkerF.config(foreground = "green")
-        if self.validate_entry(self.walkerT.get())== False:
-            self.l_walkerT.config(foreground = "red")
-            i=+1
-        else:
-            self.l_walkerT.config(foreground = "green")
-        if len(self.const_name.get())== 0:
-            self.l_consn.config(foreground = "red")
-            i=+1
-        else:
-            self.l_consn.config(foreground = "green")
+        
         if (str(self.combo_sat.get()) == 'Choose a model...') or (str(self.combo_sat.get()) == 'Aucun'):
-            print("You need to choose a model !!!")
+            #print("You need to choose a model !!!")
             self.l_combo_sat.config(foreground = "red")
             i=+1
         else:
@@ -588,10 +634,10 @@ class SatelliteSimulator(tk.Tk):
                                 str(self.combo_color_const.get()),
                                 liste_satellite[i])
                     liste_constellation.append(cons)
-                    showinfo("Message", "Constellation ajoutée avec succès !")
+                    showinfo("Message", "Constellation added successfully !")
                     [widget.delete(0, tk.END) for widget in self.const_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
-            showinfo("Error", "Un ou plusieurs parametre sont manquants")
+            showinfo("Error", "One or more parameters are incorrect !")
 
     def modify_constellation(self):
         if self.flag_mod_const == False:
@@ -628,26 +674,39 @@ class SatelliteSimulator(tk.Tk):
 
     def add_poi(self):
         i=0
-        if self.validate_entry(self.poi_alt.get()) == False:
-            self.l_alt.config(foreground = "red")
-            i=+1
-        else:
-            self.l_alt.config(foreground = "green")
-        if (self.validate_entry(self.poi_long.get())== False) and (self.flag_area==False):
-            self.l_long.config(foreground = "red")
-            i=+1
-        else:
-            self.l_long.config(foreground = "green")
-        if (self.validate_entry(self.poi_lat.get())== False) and (self.flag_area==False):
-            self.l_lat.config(foreground = "red")
-            i=+1
-        else:
-            self.l_lat.config(foreground = "green")
         if len(self.poi_name.get())== 0:
             self.l_poin.config(foreground = "red")
             i=+1
         else:
             self.l_poin.config(foreground = "green")
+        if (self.validate_entry(self.poi_lat.get())== False) and (self.flag_area==False):
+            self.l_lat.config(foreground = "red")
+            i=+1
+        elif (float(self.poi_lat.get()) < -90 or float(self.poi_lat.get()) > 90)  and (self.flag_area==False):
+            self.l_lat.config(foreground = "orange")
+            showinfo("Message", "The lalitude must be between -90° and 90°")
+            i=+1
+        else:
+            self.l_lat.config(foreground = "green")
+        if (self.validate_entry(self.poi_long.get())== False) and (self.flag_area==False):
+            self.l_long.config(foreground = "red")
+            i=+1
+        elif (float(self.poi_long.get()) < -180 or float(self.poi_long.get()) > 180)  and (self.flag_area==False):
+            self.l_long.config(foreground = "orange")
+            showinfo("Message", "The longitude must be between -180° and 180°")
+            i=+1
+        else:
+            self.l_long.config(foreground = "green")
+        
+        if self.validate_entry(self.poi_alt.get()) == False:
+            self.l_alt.config(foreground = "red")
+            i=+1
+        elif float(self.poi_alt.get()) < 0:
+            self.l_alt.config(foreground = "orange")
+            showinfo("Message", "The altitude must be positive")
+            i=+1
+        else:
+            self.l_alt.config(foreground = "green")
         if i==0:
             if self.flag_area==False:
                 coord = [float(self.poi_long.get()), float(self.poi_lat.get())]
@@ -677,10 +736,10 @@ class SatelliteSimulator(tk.Tk):
                 self.poly_list = []
             self.flag_area=False
             self.flag_country = False
-            showinfo("Message", "POI ajouté avec succès")
+            showinfo("Message", "POI added succesfully")
             [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
-            showinfo("Error", "Un ou plusieurs parametres sont manquants")
+            showinfo("Error", "One or more parameters are incorrect !")
 
     def modify_poi(self):
         if self.flag_mod_poi == False:
@@ -737,47 +796,66 @@ class SatelliteSimulator(tk.Tk):
 
     def add_gs(self):
         i=0
-        if self.validate_entry(self.gs_alt.get()) == False:
-            self.l_gsalt.config(foreground = "red")
+        if len(self.gs_name.get())== 0:
+            self.l_gsn.config(foreground = "red")
             i=+1
         else:
-            self.l_gsalt.config(foreground = "green")
+            self.l_gsn.config(foreground = "green")
+        if self.validate_entry(self.gs_lat.get())== False:
+            self.l_gslat.config(foreground = "red")
+            i=+1
+        elif float(self.gs_lat.get()) < -90 or float(self.gs_lat.get()) > 90:
+            self.l_gslat.config(foreground = "orange")
+            showinfo("Message", "Latitude must be between -90° and 90° !")
+            i=+1
+        else:
+            self.l_gslat.config(foreground = "green")
         if self.validate_entry(self.gs_long.get())== False:
             self.l_gslong.config(foreground = "red")
             i=+1
+        elif float(self.gs_long.get()) < -180 or float(self.gs_long.get()) > 180:
+            self.l_gslong.config(foreground = "orange")
+            showinfo("Message", "Longitude must be between -180° and 180° !")
+            i=+1
         else:
             self.l_gslong.config(foreground = "green")
-        if self.validate_entry(self.gs_lat.get())== False:
-            self.l_gslat.config(foreground = "red")
+
+        if self.validate_entry(self.gs_alt.get()) == False:
+            self.l_gsalt.config(foreground = "red")
+            i=+1
+        elif float(self.gs_alt.get()) < 0:
+            self.l_gsalt.config(foreground = "orange")
+            showinfo("Message", "Altitude must be positive !")
             i=+1
         else:
-            self.l_gslat.config(foreground = "green")
-        if self.validate_entry(self.gs_lat.get())== False:
-            self.l_gslat.config(foreground = "red")
-            i=+1
-        else:
-            self.l_gslat.config(foreground = "green")
+            self.l_gsalt.config(foreground = "green")
         if self.validate_entry(self.gs_ele.get())== False:
             self.l_gsel.config(foreground = "red")
+            i=+1
+        elif float(self.gs_ele.get()) < 0:
+            self.l_gsel.config(foreground = "orange")
+            showinfo("Message", "Elevation must be positive !")
             i=+1
         else:
             self.l_gsel.config(foreground = "green")
         if self.validate_entry(self.gs_ant.get())== False:
             self.l_gsant.config(foreground = "red")
             i=+1
+        elif float(self.gs_ant.get()) < 0:
+            self.l_gsant.config(foreground = "orange")
+            showinfo("Message", "The antenna's diameter must be positive !")
+            i=+1
         else:
             self.l_gsant.config(foreground = "green")
         if self.validate_entry(self.gs_deb.get())== False:
             self.l_gsdeb.config(foreground = "red")
             i=+1
-        else:
-            self.l_gsdeb.config(foreground = "green")
-
-        if len(self.gs_name.get())== 0:
-            self.l_gsn.config(foreground = "red")
+        elif float(self.gs_deb.get()) < 0:
+            self.l_gsdeb.config(foreground = "orange")
+            showinfo("Message", "Debit must be positive !")
             i=+1
         else:
-            self.l_gsn.config(foreground = "green")
+            self.l_gsdeb.config(foreground = "green")
 
         if i==0:
             gs = init_gs( str(self.gs_name.get()),
@@ -790,12 +868,12 @@ class SatelliteSimulator(tk.Tk):
                            float(self.gs_ant.get()),
                            str(self.combo_color_gs.get()))
             liste_gs.append(gs)
-            print("Ground Station ajoutée avec succes")
+            print("Ground Station added successfully !")
             gs_marker = self.__map_widget.set_marker(gs.get_coordinate()[0], gs.get_coordinate()[1], text=gs.get_name(), marker_color_circle= "blue", marker_color_outside=gs.get_color())
-            showinfo("Message", "GS ajouté avec succès !")
+            showinfo("Message", "GS added successfuly !")
             [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
-            showinfo("Error", "Un ou plusieurs parametre sont manquants")
+            showinfo("Error", "One or more parameters are incorrect !")
 
     def modify_gs(self):
         if self.flag_mod_gs == False:
@@ -836,14 +914,27 @@ class SatelliteSimulator(tk.Tk):
 
     def add_mission(self):
         i=0
+        if len(self.mission_name.get())== 0:
+            self.l_mn.config(foreground = "red")
+            i=+1
+        else:
+            self.l_mn.config(foreground = "green")
         if self.validate_entry(self.timestep.get()) == False:
             self.l_timestep.config(foreground = "red")
+            i=+1
+        elif float(self.timestep.get()) <= 0:
+            self.l_timestep.config(foreground = "orange")
+            showinfo("Message", "Timestep must be higher than 0 !")
             i=+1
         else:
             self.l_timestep.config(foreground = "green")
             
         if self.validate_entry(self.minsza.get()) == False:
             self.l_sza.config(foreground = "red")
+            i=+1
+        elif float(self.minsza.get()) <= 0:
+            self.l_sza.config(foreground = "orange")
+            showinfo("Message", "SZA must be higher than 0 !")
             i=+1
         else:
             self.l_sza.config(foreground = "green")
@@ -852,11 +943,7 @@ class SatelliteSimulator(tk.Tk):
             i=+1
         else:
             self.l_combo_const.config(foreground = "green")
-        if len(self.mission_name.get())== 0:
-            self.l_mn.config(foreground = "red")
-            i=+1
-        else:
-            self.l_mn.config(foreground = "green")
+
         if len(self.__gs_temp) == 0:
             i=+1
             self.l_combo_gs.config(foreground = "red")
@@ -878,10 +965,10 @@ class SatelliteSimulator(tk.Tk):
                                    self.__gs_temp,
                                    str(self.combo_const.get()))
             liste_mission.append(mission)
-            showinfo("Message", "Mission ajoutée avec succès")
+            showinfo("Message", "Mission added successfully !")
             [widget.delete(0, tk.END) for widget in self.mission_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
-            showinfo("Error", "Un ou plusieurs parametre sont manquants")
+            showinfo("Error", "One or more parameters are incorrect !")
 
     def chooseres(self):
         window = ChooseResolutionWindow(self.spatialres)
