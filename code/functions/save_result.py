@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from functions.calcul import simulation_time
 from functions.find_tm import centroid
-from functions.revisit import revisit_over_a_latitude
+from functions.revisit import revisit_over_a_latitude, revi
 
 def save_gs_visibility(result, name):
     if len(result) == 0:
@@ -168,6 +168,9 @@ def general_result(mission, gs_opportunities, poi_opportunities):
     revisit0 = revisit_over_a_latitude(a, swath, depointing, 0, numbersat, incl)
     revisit45=revisit_over_a_latitude(a, swath, depointing, 45, numbersat, incl)
     revisit60=revisit_over_a_latitude(a, swath, depointing, 60, numbersat, incl)
+    #revisit0 = revi(a, incl, 0)
+    #revisit45 = revi(a, incl, 45)
+    #revisit60 = revi(a, incl, 60)
 
     ##### POI
     listpoi = []

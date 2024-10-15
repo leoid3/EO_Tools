@@ -1,5 +1,5 @@
 from config import *
-import itur
+import itur #https://github.com/inigodelportillo/ITU-Rpy
 #source : https://www.nasa.gov/smallsat-institute/sst-soa/soa-communications/#9.2
 
 def get_attenuation(ele, band, lat, long, ant):

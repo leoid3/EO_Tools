@@ -671,7 +671,7 @@ class SatelliteSimulator(tk.Tk):
             self.selected_country_coords = []
             self.country_marker = []
             if self.flag_area==False:
-                poi_marker = self.__map_widget.set_marker(poi.get_coordinate(0)[0], poi.get_coordinate(0)[1], text=poi.get_name(), marker_color_outside=poi.get_color())
+                poi_marker = self.__map_widget.set_marker(poi.get_coordinate(0)[0], poi.get_coordinate(0)[1], text=poi.get_name(), marker_color_circle= "yellow", marker_color_outside=poi.get_color())
             else:
                 self.final_poly_list.append(self.poly_list[0])
                 self.poly_list = []
@@ -791,7 +791,7 @@ class SatelliteSimulator(tk.Tk):
                            str(self.combo_color_gs.get()))
             liste_gs.append(gs)
             print("Ground Station ajoutée avec succes")
-            gs_marker = self.__map_widget.set_marker(gs.get_coordinate()[0], gs.get_coordinate()[1], text=gs.get_name(), marker_color_outside=gs.get_color())
+            gs_marker = self.__map_widget.set_marker(gs.get_coordinate()[0], gs.get_coordinate()[1], text=gs.get_name(), marker_color_circle= "blue", marker_color_outside=gs.get_color())
             showinfo("Message", "GS ajouté avec succès !")
             [widget.delete(0, tk.END) for widget in self.poi_frame.winfo_children() if isinstance(widget, tk.Entry)]
         else:
@@ -1104,10 +1104,10 @@ class SatelliteSimulator(tk.Tk):
         self.reset()
         er = import_from_csv()
         for i in range(len(liste_gs)):
-            gs_marker = self.__map_widget.set_marker(liste_gs[i].get_coordinate()[0], liste_gs[i].get_coordinate()[1], text=liste_gs[i].get_name(), marker_color_outside=liste_gs[i].get_color())
+            gs_marker = self.__map_widget.set_marker(liste_gs[i].get_coordinate()[0], liste_gs[i].get_coordinate()[1], text=liste_gs[i].get_name(), marker_color_circle= "blue", marker_color_outside=liste_gs[i].get_color())
         for i in range(len(liste_poi)):
             if liste_poi[i].IsArea()== False:
-                poi_marker = self.__map_widget.set_marker(liste_poi[i].get_coordinate(0)[0], liste_poi[i].get_coordinate(0)[1], text=liste_poi[i].get_name(), marker_color_outside=liste_poi[i].get_color())
+                poi_marker = self.__map_widget.set_marker(liste_poi[i].get_coordinate(0)[0], liste_poi[i].get_coordinate(0)[1], text=liste_poi[i].get_name(), marker_color_circle= "yellow", marker_color_outside=liste_poi[i].get_color())
             else:
                 poly = self.__map_widget.set_polygon(liste_poi[i].get_area(), outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name(), )
         if er==0:

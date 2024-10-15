@@ -23,7 +23,7 @@ liste_mission = []
 satellite_map = "https://mt1.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}"
 normal_map ="https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga"
 
-#Dataset
+#default dataset
 folder = Path("dataset/50/")
 path_to_shapefile = folder / "ne_50m_admin_0_map_units.shp"
 world = gpd.read_file(path_to_shapefile)
@@ -39,7 +39,7 @@ sat_fields =['name', 'swath', 'depointing', 'type', 'color', 'orbit']
 #Definition de l'exportation (résultats de simulation)
 result_folder = Path("results/")
 resultfields_gs =['Satellite name', 'Ground Station name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)', 'Data received (Mb)']
-resultfields_poi =[f'Satellite name', 'POI name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)', 'Mean solar elevation (°)']
+resultfields_poi =['Satellite name', 'POI name', 'Start time (UTC)', 'Stop time (UTC)', 'Duration (s)', 'Mean solar elevation (°)']
 
 #Listes pour l'IHM
 list_colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
