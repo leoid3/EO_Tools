@@ -1,15 +1,17 @@
 import csv
 from tkinter.messagebox import showinfo
 from datetime import datetime
+from pathlib import Path
 from config import *
 from functions.initialisation import init_poi, init_gs, init_orb, init_sat, init_constellation, init_mission, reset_liste
 
-def import_from_csv():
+def import_from_csv(path):
     """
     Permet d'importer les données de simulation depuis un fichier .csv.
     """
     reset_liste()
     er=0
+    simulation_folder = Path(path)
     #POI
     try:
         filename = simulation_folder / 'POI.csv'
@@ -235,7 +237,6 @@ def import_poi_csv(filename):
 def import_gs_csv(filename):
     er=0
     try:
-        filename = simulation_folder / 'GS.csv'
         with open(filename, 'r') as file:
             csvreader = csv.DictReader(file)
             for row in csvreader:

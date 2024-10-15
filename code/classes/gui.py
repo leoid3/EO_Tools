@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import showinfo
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, askdirectory
 import matplotlib
 matplotlib.use("TkAgg")
 import tkintermapview as tkmap
@@ -1184,12 +1184,14 @@ class SatelliteSimulator(tk.Tk):
         if len(liste_mission)==0:
             showinfo('Error', 'You need to create a least 1 mission')
         else:
-            save_to_csv(liste_mission, liste_constellation, liste_gs, liste_poi, liste_satellite)
+            folder = askdirectory()
+            save_to_csv(liste_mission, liste_constellation, liste_gs, liste_poi, liste_satellite, folder)
             showinfo('Message', 'Simulation parameters saved')
 
     def load_simulation(self):
         self.reset()
-        er = import_from_csv()
+        folder = askdirectory()
+        er = import_from_csv(folder)
         for i in range(len(liste_gs)):
             gs_marker = self.__map_widget.set_marker(liste_gs[i].get_coordinate()[0], liste_gs[i].get_coordinate()[1], text=liste_gs[i].get_name(), marker_color_circle= "blue", marker_color_outside=liste_gs[i].get_color())
         for i in range(len(liste_poi)):

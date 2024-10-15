@@ -1,11 +1,12 @@
 import csv
 from config import *
+from pathlib import Path
 
-def save_to_csv(lm, lc, lgs, lpoi, ls):
+def save_to_csv(lm, lc, lgs, lpoi, ls, path):
     """
     Sauvegarde les différentes données.
     """
-    
+    simulation_folder = Path(path)
     #Mission
     mission_data = []
     for i in range(len(lm)):
