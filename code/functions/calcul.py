@@ -4,8 +4,14 @@ import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
+from datetime import timedelta
+import pandas as pd
+import pvlib
+from pvlib.location import Location
 from config import *
 import time, os
+from shapely.geometry import Polygon
+from shapely.prepared import prep
 from functions.oe_to_sv import orbital_elements_to_state_vectors
 from functions.solver import runge_kutta_4, deriv
 from functions.orbit_3D import plot_orbit_3d, show_sat
@@ -205,3 +211,72 @@ def poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time):
             tf = time_inter[j+1]
             interval.append((t0, tf))
     return interval, angle_list  
+
+def poi_grid(x, y, z, lat, long, poix, poiy, poiz, swath, miss, tm, name, alt):
+    angle_list = []
+    distance_list = []
+    visible = False
+    sza = False
+    zenith_angle, _ = sun_zenith_angle(miss, lat, long, alt, tm, name)
+    liste_sza = zenith_angle['elevation']
+    for j in range(len(x)):
+        enu_vector = ECEF_to_ENU(x[j], y[j], z[j], lat, long, poix, poiy, poiz)
+        E, N, U = enu_vector
+        angle = np.arcsin(U / np.sqrt(E**2 + N**2 + U**2)) * (180 / np.pi)
+        angle_list.append(float(angle))
+        distance = np.sqrt(E**2 + N**2)
+        distance_list.append(distance)
+    for j in range(len(angle_list)):
+        if (angle_list[j] > 0) and (distance_list[j] < swath):
+            visible = True
+            if liste_sza[j] > miss.get_minsza():
+                sza = True
+            break
+    
+    return visible, sza
+
+def grid_bounds(poly, delta):
+    minx, miny, maxx, maxy = poly.bounds
+    nx = int((maxx - minx)/delta)
+    ny = int((maxy - miny)/delta)
+    gx, gy = np.linspace(minx,maxx,nx), np.linspace(miny,maxy,ny)
+    grid = []
+    for i in range(len(gx)-1):
+        for j in range(len(gy)-1):
+            poly_ij = Polygon([[gx[i],gy[j]],[gx[i],gy[j+1]],[gx[i+1],gy[j+1]],[gx[i+1],gy[j]]])
+            grid.append( poly_ij )
+    return grid
+
+def partition(poly):
+    prepared_geom = prep(poly)
+    if poly.area < 0.05:
+        return None
+    else:
+        delta = resolution_step(poly)
+        grid = list(filter(prepared_geom.intersects, grid_bounds(poly, delta)))
+        return grid
+
+def resolution_step(poly, min_delta=0.01, max_delta=1):
+    area = poly.area
+    normalized_area = np.log1p(area)/np.log1p(50)
+    delta = min_delta + (max_delta - min_delta) * normalized_area
+    return delta
+
+def sun_zenith_angle(miss, latitude_target, longitude_target, altitude, time_zone, name):
+    """
+    Permet de calculer le sza d'un point sur la durée de la mission.
+    """
+    delta, _, _, dt = simulation_time(miss)
+    t0 = miss.get_T0()
+    if delta.days ==0:
+        tf = miss.get_T0() + timedelta(days=1)
+    else:
+        tf = miss.get_TF()
+    
+    site = Location(latitude_target, longitude_target, time_zone, altitude, name)
+    time_range = pd.date_range(t0, tf, freq=timedelta(seconds=dt), tz=site.tz)
+    solpos = pvlib.solarposition.get_solarposition(time_range, site.latitude, site.longitude, site.altitude, method='nrel_numpy')
+
+    zenith_angle = solpos
+
+    return zenith_angle, time_range

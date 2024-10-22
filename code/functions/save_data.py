@@ -39,8 +39,8 @@ def save_to_csv(lm, lc, lgs, lpoi, ls, path):
     #POI
     POI_data = []
     for i in range(len(lpoi)):
-        if lpoi[i].IsArea() == True:
-            coord = lpoi[i].get_area()
+        if lpoi[i].IsArea() == True:   
+                coord = lpoi[i].get_area()
         else:
             coord = [lpoi[i].get_coordinate(0)[1], lpoi[i].get_coordinate(0)[0]]
         poi = [lpoi[i].get_name(),
@@ -49,7 +49,8 @@ def save_to_csv(lm, lc, lgs, lpoi, ls, path):
                lpoi[i].get_color(),
                lpoi[i].get_timezone(),
                lpoi[i].get_sza(),
-               lpoi[i].IsArea()
+               lpoi[i].IsArea(),
+               lpoi[i].get_multi()
             ]
         POI_data.append(poi)
     filename = simulation_folder / "POI.csv"

@@ -31,8 +31,8 @@ world = gpd.read_file(path_to_shapefile)
 #Definition de l'exportation (données de simulation)
 #simulation_folder = Path("simulation_data/")
 mission_fields = ['name', 'starttime', 'endtime', 'timestep', 'type', 'minsza', 'poi', 'gs', 'constellation']
-poi_fields = ['name', 'coordinate', 'altitude','color', 'timezone', 'sza', 'area']
-gs_fields =['name', 'coordinate', 'altitude', 'elevation','antenna', 'band', 'debit', 'color']
+poi_fields = ['name', 'coordinate', 'altitude','color', 'timezone', 'sza', 'area', 'multi']
+gs_fields =['name', 'coordinate', 'altitude', 'elevation', 'band', 'debit','antenna', 'color']
 cons_fields =['name', 'walkerT', 'walkerP', 'walkerF', 'satmodel', 'color']
 sat_fields =['name', 'swath', 'depointing', 'type', 'color', 'orbit']
 

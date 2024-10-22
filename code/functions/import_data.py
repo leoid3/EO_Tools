@@ -51,6 +51,8 @@ def import_from_csv(path):
                                 coordinate.append((float(lat[1:]), float(long[:-1])))
                     print(len(coordinate))
                     poi = init_poi(row['name'], coordinate, float(row['altitude']), row['color'], row['area'] == 'True')
+                    if row['multi'] == 'True':
+                        poi.set_multi()
                     liste_poi.append(poi)
             showinfo("Message", 'POI imported')
     except FileNotFoundError:
@@ -227,6 +229,8 @@ def import_poi_csv(filename):
                                 coordinate.append((float(lat[1:]), float(long[:-1])))
                     print(len(coordinate))
                     poi = init_poi(row['name'], coordinate, float(row['altitude']), row['color'], row['area'] == 'True')
+                    if row['multi'] == 'True':
+                        poi.set_multi()
                     liste_poi.append(poi)
             showinfo("Message", 'POI imported')
     except FileNotFoundError:

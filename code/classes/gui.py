@@ -7,20 +7,22 @@ matplotlib.use("TkAgg")
 import tkintermapview as tkmap
 from satellite_tle import fetch_tle_from_celestrak
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from tkcalendar import DateEntry
 import numpy as np
 from datetime import timedelta, datetime
+from shapely.geometry import Polygon, Point
+import geopandas as gpd
 
 from config import *
 from functions.initialisation import init_constellation, init_poi, init_gs, init_mission, init_sat, init_orb, reset_liste
-from functions.calcul import calcul_traj, true_anomaly, simulation_time, calcul_swath, gs_interval, poi_interval
+from functions.calcul import calcul_traj, true_anomaly, simulation_time, calcul_swath, gs_interval, poi_interval, poi_grid, partition, sun_zenith_angle
 from functions.save_data import save_to_csv
 from functions.import_data import import_from_csv, import_poi_csv, import_gs_csv
 from functions.country import get_country_name, get_poly_coordinate
 from functions.coordinates_converter import latlong_to_cartesian
 from functions.save_result import save_gs_visibility, save_poi_visibility, general_result
 from functions.find_tm import centroid
-from functions.sza import sun_zenith_angle
 from functions.itur_model import get_attenuation
 
 #############################################################################################
@@ -32,11 +34,13 @@ class SatelliteSimulator(tk.Tk):
         self.marker_list=[]
         self.marker_poi = []
         self.poly_list = []
-        self.final_poly_list = []
         self.country_coords =[]
+        self.grid_coords = []
+        self.grid_poly = []
         self.country_marker =[]
         self.calcul_marker =[]
         self.selected_country_coords = []
+        self.final_poly_list = []
         self.satellite_marker =[]
         self.flag_area = False
         self.flag_country = False
@@ -679,24 +683,25 @@ class SatelliteSimulator(tk.Tk):
             i=+1
         else:
             self.l_poin.config(foreground = "green")
-        if (self.validate_entry(self.poi_lat.get())== False) and (self.flag_area==False):
-            self.l_lat.config(foreground = "red")
-            i=+1
-        elif (float(self.poi_lat.get()) < -90 or float(self.poi_lat.get()) > 90)  and (self.flag_area==False):
-            self.l_lat.config(foreground = "orange")
-            showinfo("Message", "The lalitude must be between -90° and 90°")
-            i=+1
-        else:
-            self.l_lat.config(foreground = "green")
-        if (self.validate_entry(self.poi_long.get())== False) and (self.flag_area==False):
-            self.l_long.config(foreground = "red")
-            i=+1
-        elif (float(self.poi_long.get()) < -180 or float(self.poi_long.get()) > 180)  and (self.flag_area==False):
-            self.l_long.config(foreground = "orange")
-            showinfo("Message", "The longitude must be between -180° and 180°")
-            i=+1
-        else:
-            self.l_long.config(foreground = "green")
+        if self.flag_area==False:
+            if (self.validate_entry(self.poi_lat.get())== False):
+                self.l_lat.config(foreground = "red")
+                i=+1
+            elif (float(self.poi_lat.get()) < -90 or float(self.poi_lat.get()) > 90):
+                self.l_lat.config(foreground = "orange")
+                showinfo("Message", "The lalitude must be between -90° and 90°")
+                i=+1
+            else:
+                self.l_lat.config(foreground = "green")
+            if (self.validate_entry(self.poi_long.get())== False):
+                self.l_long.config(foreground = "red")
+                i=+1
+            elif (float(self.poi_long.get()) < -180 or float(self.poi_long.get()) > 180):
+                self.l_long.config(foreground = "orange")
+                showinfo("Message", "The longitude must be between -180° and 180°")
+                i=+1
+            else:
+                self.l_long.config(foreground = "green")
         
         if self.validate_entry(self.poi_alt.get()) == False:
             self.l_alt.config(foreground = "red")
@@ -712,14 +717,23 @@ class SatelliteSimulator(tk.Tk):
                 coord = [float(self.poi_long.get()), float(self.poi_lat.get())]
             elif self.flag_country == True:
                 coord = self.selected_country_coords
+                grid = self.grid_coords
+                poly_grid = self.grid_poly
             else:
                 coord = self.marker_list
+                grid = self.grid_coords
+                poly_grid = self.grid_poly
             
             poi = init_poi(str(self.poi_name.get()),
                            coord,
                            float(self.poi_alt.get()),
                            str(self.combo_color_poi.get()),
                            self.flag_area)
+            if self.flag_area == True or self.flag_country == True:
+                poi.set_grid(grid)
+                poi.set_poly(poly_grid)
+                if len(poly_grid)!=1:
+                    poi.set_multi()
             liste_poi.append(poi)
             self.poi_lat.config(state="enable")
             self.poi_long.config(state="enable")
@@ -727,6 +741,8 @@ class SatelliteSimulator(tk.Tk):
             for i in range(len(self.marker_poi)):
                 self.marker_poi[i].delete()
             self.marker_list = []
+            self.grid_coords = []
+            self.grid_poly = []
             self.selected_country_coords = []
             self.country_marker = []
             if self.flag_area==False:
@@ -778,7 +794,20 @@ class SatelliteSimulator(tk.Tk):
                 if liste_poi[i].IsArea()== False:
                     poi_marker = self.__map_widget.set_marker(liste_poi[i].get_coordinate(0)[0], liste_poi[i].get_coordinate(0)[1], text=liste_poi[i].get_name(), marker_color_outside=liste_poi[i].get_color())
                 else:
-                    poly = self.__map_widget.set_polygon(liste_poi[i].get_area(), outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name(), )
+                    if liste_poi[i].get_multi():
+                        liste_poi[i].set_multipoly(liste_poi[i].get_area())
+                        coords = liste_poi[i].get_area()
+                        for j in range(len(coords)):
+                            poly = self.__map_widget.set_polygon(coords[j], outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name())
+                    else:
+                        poly = self.__map_widget.set_polygon(liste_poi[i].get_area(), outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name())
+                    self.grid_show_test(liste_poi[i].get_area())
+                    grid = self.grid_coords
+                    poly_grid = self.grid_poly
+                    liste_poi[i].set_grid(grid)
+                    liste_poi[i].set_poly(poly_grid)
+                    self.grid_coords = []
+                    self.grid_poly = []
             showinfo("Message", "POIs loaded succesfully")
         else:
             showinfo("Error", "Something went wrong !")
@@ -1012,6 +1041,7 @@ class SatelliteSimulator(tk.Tk):
                 self.country_marker[0].delete()
                 self.country_marker.clear()
                 self.country_coords.clear()
+                self.grid_show_test(self.selected_country_coords)
         else:
             showinfo("Error", "Area already created")  
         
@@ -1020,13 +1050,65 @@ class SatelliteSimulator(tk.Tk):
             self.poi_lat.config(state="disable")
             self.poi_long.config(state="disable")
             poly_name = f"{len(self.poly_list)+1}"
+            
             poly = self.__map_widget.set_polygon(self.marker_list, outline_color="blue", fill_color="green", name=poly_name)
-            self.poly_list.append(poly)   
+            self.poly_list.append(poly)
+            self.grid_show_test(self.marker_list)   
             self.flag_area = True
             
         else:
             showinfo("Error", "Area already created")  
         return
+
+    def grid_show_test(self, coords):
+        list_coords = []
+        list_poly = []
+        #Réorganise les coordonnées pour creer des polygons
+        if len(coords) == 1:
+            for i in range(len(coords[0])):
+                temp = coords[0][i]
+                list_coords.append([temp[1], temp[0]])
+        else:
+            for i in range(len(coords)):
+                if len(coords[i]) == 2:
+                    list_coords.append([coords[i][1], coords[i][0]])
+                else:
+                    for j in range(len(coords[i])):
+                        temp = coords[i][j]
+                        list_coords.append([temp[1], temp[0]])
+                    list_poly.append(list_coords)
+                    list_coords = []
+        #Créé la grille dans le polygon et l'affiche
+        if len(list_poly) == 0:
+            poly = Polygon(list_coords)
+            grid = partition(poly)    
+            for grid_poly in grid:
+                self.grid_coords.append(grid_poly)
+            self.grid_poly.append(poly)
+            #fig, ax = plt.subplots(figsize=(15, 15))
+            #gpd.GeoSeries(grid).boundary.plot(ax=ax)
+            #gpd.GeoSeries([poly]).boundary.plot(ax=ax,color="red")
+            #plt.show()
+        else:
+            poly = []
+            grid = []
+            for i in range(len(list_poly)): 
+                poly.append(Polygon(list_poly[i]))
+            for i in range(len(poly)):
+                grid.append(partition(poly[i]))
+            #fig, ax = plt.subplots(figsize=(15, 15))
+            for i in range(len(grid)):
+                if grid[i] ==None:
+                    pass
+                else:
+                    temp_coords = []
+                    #gpd.GeoSeries(grid[i]).boundary.plot(ax=ax)
+                    self.grid_poly.append(poly[i]) 
+                    #gpd.GeoSeries([poly[i]]).boundary.plot(ax=ax,color="red")
+                    for grid_poly in grid[i]:
+                        temp_coords.append(grid_poly)
+                    self.grid_coords.append(temp_coords)
+            #plt.show()
 
     def copy_coords_poi(self, coord):
         self.poi_lat.insert(0, coord[0])
@@ -1198,7 +1280,20 @@ class SatelliteSimulator(tk.Tk):
             if liste_poi[i].IsArea()== False:
                 poi_marker = self.__map_widget.set_marker(liste_poi[i].get_coordinate(0)[0], liste_poi[i].get_coordinate(0)[1], text=liste_poi[i].get_name(), marker_color_circle= "yellow", marker_color_outside=liste_poi[i].get_color())
             else:
-                poly = self.__map_widget.set_polygon(liste_poi[i].get_area(), outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name(), )
+                if liste_poi[i].get_multi():
+                    liste_poi[i].set_multipoly(liste_poi[i].get_area())
+                    coords = liste_poi[i].get_area()
+                    for j in range(len(coords)):
+                        poly = self.__map_widget.set_polygon(coords[j], outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name())
+                else:
+                    poly = self.__map_widget.set_polygon(liste_poi[i].get_area(), outline_color=liste_poi[i].get_color(), fill_color=liste_poi[i].get_color(), name=liste_poi[i].get_name())
+                self.grid_show_test(liste_poi[i].get_area())
+                grid = self.grid_coords
+                poly_grid = self.grid_poly
+                liste_poi[i].set_grid(grid)
+                liste_poi[i].set_poly(poly_grid)
+                self.grid_coords = []
+                self.grid_poly = []
         if er==0:
             showinfo("Message", "Simulation parameters loaded")
         else:
@@ -1279,69 +1374,120 @@ class SatelliteSimulator(tk.Tk):
             poi_visiblity_interval = []
             date_ini_list = []
             timedelta_list = []
-
-            fig2d = plt.figure(figsize=(8, 10))
-            ax_2D = fig2d.add_subplot(311)
             poi = miss.get_poi(i)
             if poi.IsArea() == False:
+                fig2d = plt.figure(figsize=(8, 10))
+                ax_2D = fig2d.add_subplot(311)
                 long = poi.get_coordinate(0)[1]
                 lat =  poi.get_coordinate(0)[0]
+                alt = poi.get_altitude()
+                poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
+                x, y, z = chosen_sat.get_position_ecef()
+                swath = calcul_swath(chosen_sat)*1000
+                interval, angle_list = poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time)
+                poi_visiblity_interval.append(interval)
+
+                #Plot de l'angle d'élévation au cour du temps
+                ax_2D.set_xlabel("Time (UTC)")
+                ax_2D.set_ylabel("Elevation (°)")
+                ax_2D.plot(time_in_days, angle_list, label=f"Elevation from {poi.get_name()}", color=chosen_sat.get_color())
+                ax_2D.legend()
+                plt.title(f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}")
+                plt.grid(True)
+                plt.xticks(rotation=45)
+                plt.tight_layout()
+                
+                zenith_angle, zenith_time = sun_zenith_angle(miss, lat, long, alt, poi.get_timezone(), poi.get_name())
+                #Plot l'élévation du soleil sur le point d'interet au cour du temps
+                ax_2D_2 = fig2d.add_subplot(312)
+                ax_2D_2.plot(zenith_time, zenith_angle['elevation'], label='Sun zenith angle', color='blue')
+                ax_2D_2.plot(time_in_days, np.full((len(time_in_days), 1), (float(miss.get_minsza()))) , label=f"Minimum sun elevation ({float(miss.get_minsza())}°) for the mission", color='black')
+                ax_2D_2.set_xlabel('Times (UTC)')
+                ax_2D_2.set_ylabel('Sun elevation angle (°)')
+                ax_2D_2.legend()
+                plt.title(f"Evolution of the sun elevation angle at {poi.get_name()}")
+                plt.grid(True)
+                plt.xticks(rotation=45)
+                plt.tight_layout()
+                
+                for k in range(len(poi_visiblity_interval)):
+                    for j in range(len(poi_visiblity_interval[k])):
+                        temp = poi_visiblity_interval[k][j]
+                        date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
+                        date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
+                        date_ini_list.append(date_ini)
+                        delta = date_fin - date_ini
+                        timedelta_list.append(delta.seconds)
+                        elevation_ini = zenith_angle.loc[date_ini.strftime("%Y-%m-%d %H:%M:%S")].elevation
+                        elevation_fin = zenith_angle.loc[date_fin.strftime("%Y-%m-%d %H:%M:%S")].elevation
+                        mean_elevation = (elevation_ini+elevation_fin)/2
+                        visibility.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds, mean_elevation))
+
+                #Plot les durées de visibilité
+                ax_2D_3 = fig2d.add_subplot(313)
+                ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.35, color=list_colors, align='center')
+                ax_2D_3.set_ylabel('Times (s)')
+                ax_2D_3.legend()
+                plt.title(f"Visibilities duration at {poi.get_name()} with a swath of {chosen_sat.get_swath()} km")
+                plt.grid(True)
+                plt.xticks(rotation=45)
+                plt.tight_layout()
+                fig2d.savefig(result_folder / miss.get_name() / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
+                save_poi_visibility(visibility, miss.get_name())
             else:
-                long, lat = centroid(poi.get_area())
+                self.visibility_grid(poi, chosen_sat, miss)
+
+                
+        plt.show()
+
+    def visibility_grid(self, poi, chosen_sat, miss):
+        liste_centroid = []
+        square_visible = []
+        grid_poi = poi.get_grid()
+        x, y, z = chosen_sat.get_position_ecef()
+        swath = calcul_swath(chosen_sat)*1000
+        if poi.get_multi():
+            for i in range(len(grid_poi)):
+                for square in grid_poi[i]:
+                    liste_centroid.append(square.centroid)
+        else:
+            for square in grid_poi:
+                liste_centroid.append(square.centroid)
+
+        for i in range(len(liste_centroid)):
+            long = liste_centroid[i].x
+            lat = liste_centroid[i].y
+            point = Point(long, lat)
             alt = poi.get_altitude()
             poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
-            x, y, z = chosen_sat.get_position_ecef()
-            swath = calcul_swath(chosen_sat)*1000
-            interval, angle_list = poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time)
-            poi_visiblity_interval.append(interval)
-            #Plot de l'angle d'élévation au cour du temps
-            ax_2D.set_xlabel("Time (UTC)")
-            ax_2D.set_ylabel("Elevation (°)")
-            ax_2D.plot(time_in_days, angle_list, label=f"Elevation from {poi.get_name()}", color=chosen_sat.get_color())
-            ax_2D.legend()
-            plt.title(f"Visibility from {poi.get_name()} of {chosen_sat.get_name()}")
-            plt.grid(True)
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            
-            zenith_angle, zenith_time = sun_zenith_angle(miss, lat, long, alt, poi.get_timezone(), poi.get_name())
-            #Plot l'élévation du soleil sur le point d'interet au cour du temps
-            ax_2D_2 = fig2d.add_subplot(312)
-            ax_2D_2.plot(zenith_time, zenith_angle['elevation'], label='Sun zenith angle', color='blue')
-            ax_2D_2.plot(time_in_days, np.full((len(time_in_days), 1), (float(miss.get_minsza()))) , label=f"Minimum sun elevation ({float(miss.get_minsza())}°) for the mission", color='black')
-            ax_2D_2.set_xlabel('Times (UTC)')
-            ax_2D_2.set_ylabel('Sun elevation angle (°)')
-            ax_2D_2.legend()
-            plt.title(f"Evolution of the sun elevation angle at {poi.get_name()}")
-            plt.grid(True)
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            
-            for k in range(len(poi_visiblity_interval)):
-                for j in range(len(poi_visiblity_interval[k])):
-                    temp = poi_visiblity_interval[k][j]
-                    date_ini = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[0]))
-                    date_fin = datetime.combine(miss.get_T0(), datetime.min.time()) + timedelta(seconds=int(temp[1]))
-                    date_ini_list.append(date_ini)
-                    delta = date_fin - date_ini
-                    timedelta_list.append(delta.seconds)
-                    elevation_ini = zenith_angle.loc[date_ini.strftime("%Y-%m-%d %H:%M:%S")].elevation
-                    elevation_fin = zenith_angle.loc[date_fin.strftime("%Y-%m-%d %H:%M:%S")].elevation
-                    mean_elevation = (elevation_ini+elevation_fin)/2
-                    visibility.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds, mean_elevation))
-            #Plot les durées de visibilité
-            ax_2D_3 = fig2d.add_subplot(313)
-            ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.35, color=list_colors, align='center')
-            ax_2D_3.set_ylabel('Times (s)')
-            ax_2D_3.legend()
-            plt.title(f"Visibilities duration at {poi.get_name()} with a swath of {chosen_sat.get_swath()} km")
-            plt.grid(True)
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            fig2d.savefig(result_folder / miss.get_name() / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
-        
-        plt.show()
-        save_poi_visibility(visibility, miss.get_name())
+            visible, sza = poi_grid(x, y, z, lat, long, poix, poiy, poiz, swath, miss, poi.get_timezone(), poi.get_name(), alt)
+            square_visible.append((visible, sza, point))
+        poi_poly = poi.get_poly()
+        fig, ax = plt.subplots(figsize=(15, 15))
+        if poi.get_multi():
+            for i in range(len(grid_poi)):
+                if grid_poi[i] == None:
+                    pass
+                else:
+                    gpd.GeoSeries(grid_poi[i]).boundary.plot(ax=ax)
+                    gpd.GeoSeries([poi_poly[i]]).boundary.plot(ax=ax,color="red")
+        else:
+            gpd.GeoSeries(grid_poi).boundary.plot(ax=ax)
+            gpd.GeoSeries([poi_poly[0]]).boundary.plot(ax=ax,color="red")
+        green = Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='Observation possible')
+        orange = Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=10, label='Area visible but minimum sza not reached')
+        red =Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Observation impossible')
+        for i in range(len(square_visible)):
+            if square_visible[i][0]:
+                if square_visible[i][1]:
+                    gpd.GeoSeries(square_visible[i][2]).plot(ax=ax, color="green")
+                else:
+                    gpd.GeoSeries(square_visible[i][2]).plot(ax=ax, color="orange")
+            else:
+                gpd.GeoSeries(square_visible[i][2]).plot(ax=ax, color="red")
+        ax.legend(handles=[green, orange, red])
+        plt.title(f"Visibility map of {poi.get_name()}")
+        fig.savefig(result_folder / miss.get_name() / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
 
     def save_result(self):
         for i in range(len(liste_mission)):
