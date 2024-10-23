@@ -176,19 +176,6 @@ def general_result(mission, gs_opportunities, poi_opportunities):
                                     pass
                 if i==0:
                     color.append(color_temp)
-
-                            
-                              
-                """
-                        for q in range(len(visi)):
-                            if visi[q][0]:
-                                if visi[q][1]:
-                                    gpd.GeoSeries(visi[q][2]).plot(ax=ax, color="green")
-                                else:
-                                    gpd.GeoSeries(visi[q][2]).plot(ax=ax, color="orange")
-                            else:
-                                gpd.GeoSeries(visi[q][2]).plot(ax=ax, color="red")
-                """
             for i in range(len(color)):
                 for j in range(len(color[i])):
                     if color[i][j][0]==2:
