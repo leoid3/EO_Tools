@@ -1515,19 +1515,38 @@ class SatelliteSimulator(tk.Tk):
 
             for i in range(len(poi)):
                 poi_visibility = []
-                if poi[i].IsArea() == False:
+                liste_centroid = []
+                grid_poi = poi[i].get_grid()
+                alt = poi[i].get_altitude()
+                if poi[i].IsArea():
+                    if poi[i].get_multi():
+                        for k in range(len(grid_poi)):
+                            for square in grid_poi[k]:
+                                liste_centroid.append(square.centroid)
+                    else:
+                        for square in grid_poi:
+                            liste_centroid.append(square.centroid)
+                else:
                     long = poi[i].get_coordinate(0)[1]
                     lat =  poi[i].get_coordinate(0)[0]
-                else:
-                    long, lat = centroid(poi[i].get_area())
-                alt = poi[i].get_altitude()
-                poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
 
                 for j in range(len(sat)):
                     x, y, z = sat[j].get_position_ecef()
                     swath = calcul_swath(sat[j])*1000
-                    interval, _ = poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time)
-                    poi_visibility.append(( sat[j].get_name(), len(interval)))
+                    if poi[i].IsArea():
+                        square_visible = []
+                        for q in range(len(liste_centroid)):
+                            long = liste_centroid[q].x
+                            lat = liste_centroid[q].y
+                            point = Point(long, lat)
+                            poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
+                            visible, sza = poi_grid(x, y, z, lat, long, poix, poiy, poiz, swath, mission, poi[i].get_timezone(), poi[i].get_name(), alt)
+                            square_visible.append((visible, sza, point))
+                        poi_visibility.append((True, square_visible, poi[i].get_poly(), grid_poi, poi[i].get_multi()))
+                    else:
+                        poix, poiy, poiz = latlong_to_cartesian(lat, long, alt)
+                        interval, _ = poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time)
+                        poi_visibility.append(( False, sat[j].get_name(), len(interval)))
                 poi_opportunities.append((poi[i].get_name(), poi_visibility))
             
             for i in range(len(gs)):

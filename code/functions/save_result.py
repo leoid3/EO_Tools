@@ -7,6 +7,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from functions.calcul import simulation_time
 from functions.find_tm import centroid
 from functions.revisit import revisit_over_a_latitude, revi
@@ -67,7 +68,10 @@ def general_result(mission, gs_opportunities, poi_opportunities):
                         else:
                             lat = temp.get_coordinate(0)[0]
                             long = temp.get_coordinate(0)[1]
-                        number = poi_visi[i-1]
+                        if poi_visi[i-1] == False:
+                            number = "Not available for an area"
+                        else:
+                            number = poi_visi[i-1]
                         if i == 1:
                             new_value = temp.get_name() + "<br></br>" + "Coordinates : " + str(lat) + "°  " + str(long) + "°" + "<br></br>" + "Altitude : " + str(temp.get_altitude()) + " m" + "<br></br>" + "Total number of times visible : " + str(number) + "<br></br>" + "Mean duration time : " + "XX" +" s" + "<br></br>"+ "<POIopportunities>" + "<br></br>"
                         else:
@@ -90,8 +94,8 @@ def general_result(mission, gs_opportunities, poi_opportunities):
             else:
                 text = text.replace(key, value)
         return text
-    
-    def plot_result(opportunities):
+
+    def plot_result_gs(opportunities):
         fig2d = plt.figure(figsize=(10, 6))
         ax_2D = fig2d.add_subplot(111)
         temp = opportunities
@@ -111,10 +115,118 @@ def general_result(mission, gs_opportunities, poi_opportunities):
         fig2d.savefig(result_folder / mission.get_name() / f"Visibility at {title}.png", bbox_inches='tight')
         img = Image(result_folder / mission.get_name() / f"Visibility at {title}.png", width=400, height=300)
         return img
+
+    def plot_result_poi(opportunities):
+        temp = opportunities
+        visi_list = []
+        color = []
+        if temp[1][0][0]:
+            fig, ax = plt.subplots(figsize=(15, 15))
+            if temp[1][1][4]:
+                grid_poi = temp[1][1][3]
+                poi_poly = temp[1][1][2]
+                for k in range(len(grid_poi)):
+                    if grid_poi[k] == None:
+                        pass
+                    else:
+                        gpd.GeoSeries(grid_poi[k]).boundary.plot(ax=ax)
+                        gpd.GeoSeries([poi_poly[k]]).boundary.plot(ax=ax,color="red")
+            else:
+                grid_poi = temp[1][1][3]
+                poi_poly = temp[1][1][2]
+                gpd.GeoSeries(grid_poi).boundary.plot(ax=ax)
+                gpd.GeoSeries([poi_poly[0]]).boundary.plot(ax=ax,color="red")
+            for i in range(len(temp)):
+                for j in range(len(temp[i])):
+                    if i== 0:
+                        title = temp[0]
+                    else:
+                        visi_list.append(temp[i][j][1])
+            for i in range(len(visi_list)):
+                color_temp = []
+                for j in range(len(visi_list[i])):
+                        if i ==0:
+                            if visi_list[0][j][0]:
+                                if visi_list[0][j][1]:
+                                    color_temp.append([2, visi_list[0][j][2]])
+                                else:
+                                    color_temp.append([1, visi_list[0][j][2]])
+                            else:
+                                color_temp.append([0, visi_list[0][j][2]])
+                        else:
+                            print(color[0][j][0])
+                            if color[0][j][0]==2:
+                                pass
+                            elif color[0][j][0]==1:
+                                if visi_list[i][j][0]:
+                                    if visi_list[i][j][1]:
+                                        color[0][j][0]=2
+                                    else:
+                                        pass
+                                else:
+                                    pass
+                            elif color[0][j][0]==0:
+                                print(visi_list[i][j][0])
+                                if visi_list[i][j][0]:
+                                    if visi_list[i][j][1]:
+                                        color[0][j][0]=2
+                                    else:
+                                        color[0][j][0]=1
+                                else:
+                                    pass
+                if i==0:
+                    color.append(color_temp)
+
+                            
+                              
+                """
+                        for q in range(len(visi)):
+                            if visi[q][0]:
+                                if visi[q][1]:
+                                    gpd.GeoSeries(visi[q][2]).plot(ax=ax, color="green")
+                                else:
+                                    gpd.GeoSeries(visi[q][2]).plot(ax=ax, color="orange")
+                            else:
+                                gpd.GeoSeries(visi[q][2]).plot(ax=ax, color="red")
+                """
+            for i in range(len(color)):
+                for j in range(len(color[i])):
+                    if color[i][j][0]==2:
+                        gpd.GeoSeries(color[i][j][1]).plot(ax=ax, color="green")
+                    elif color[i][j][0]==1:
+                        gpd.GeoSeries(color[i][j][1]).plot(ax=ax, color="orange")
+                    else:
+                        gpd.GeoSeries(color[i][j][1]).plot(ax=ax, color="red")
+            green = Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='Observation possible')
+            orange = Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=10, label='Area visible but minimum sza not reached')
+            red =Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Observation impossible')
+            ax.legend(handles=[green, orange, red])
+            ax.set_title(f"Visibility map of {title}")
+            fig.savefig(result_folder / mission.get_name() / f"Visibility at {title}.png", bbox_inches='tight')
+            img = Image(result_folder / mission.get_name() / f"Visibility at {title}.png", width=400, height=300)
+            return img
+        else:
+            fig2d = plt.figure(figsize=(10, 6))
+            ax_2D = fig2d.add_subplot(111)
+            abscisse = []
+            ordonnees = []
+            for i in range(len(temp)):
+                if i== 0:
+                    title = temp[0]
+                else:
+                    for j in range(len(temp[i])):
+                        data = temp[i][j]
+                        abscisse.append(data[1])
+                        ordonnees.append(data[2])
+            ax_2D.bar(abscisse, ordonnees, width=0.35, color=list_colors, align='center')
+            ax_2D.set_title("Number of visibility per satellite at " + title)
+            ax_2D.legend()
+            fig2d.savefig(result_folder / mission.get_name() / f"Visibility at {title}.png", bbox_inches='tight')
+            img = Image(result_folder / mission.get_name() / f"Visibility at {title}.png", width=400, height=300)
+            return img
     
     def number_of_visibility(opportunities):
         temp = opportunities
-        
         total = 0
         for i in range(len(temp)):
             if i== 0:
@@ -179,8 +291,12 @@ def general_result(mission, gs_opportunities, poi_opportunities):
     for i in range(mission.get_nb_poi()):
         listpoi.append(mission.get_poi(i))
     for i in range(len(poi_opportunities)):
-        data = number_of_visibility(poi_opportunities[i])
-        poi_visi.append(data)
+        temp = poi_opportunities[i]
+        if temp[0]:
+            poi_visi.append(False)
+        else:
+            data = number_of_visibility(temp)
+            poi_visi.append(data)
 
     ##### GS
     listegs = []
@@ -283,7 +399,7 @@ def general_result(mission, gs_opportunities, poi_opportunities):
                         for i, part in enumerate(parts):
                             if i<len(parts)-1:
                                 elements.append(Paragraph(part, styles["body"]))
-                                img = plot_result(gs_opportunities[i])
+                                img = plot_result_gs(gs_opportunities[i])
                                 elements.append(img)
                         passed = 1
                         break
@@ -292,7 +408,7 @@ def general_result(mission, gs_opportunities, poi_opportunities):
                         for i, part in enumerate(parts):
                             if i<len(parts)-1:
                                 elements.append(Paragraph(part, styles["body"]))
-                                img = plot_result(poi_opportunities[i])
+                                img = plot_result_poi(poi_opportunities[i])
                                 elements.append(img)
                         passed = 1
                         break
