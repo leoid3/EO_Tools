@@ -118,9 +118,10 @@ def general_result(mission, gs_opportunities, poi_opportunities):
 
     def plot_result_poi(opportunities):
         temp = opportunities
-        visi_list = []
-        color = []
+        
         if temp[1][0][0]:
+            visi_list = []
+            color = []
             fig, ax = plt.subplots(figsize=(15, 15))
             if temp[1][1][4]:
                 grid_poi = temp[1][1][3]
@@ -176,10 +177,12 @@ def general_result(mission, gs_opportunities, poi_opportunities):
                                     pass
                 if i==0:
                     color.append(color_temp)
+            prct = 0
             for i in range(len(color)):
                 for j in range(len(color[i])):
                     if color[i][j][0]==2:
                         gpd.GeoSeries(color[i][j][1]).plot(ax=ax, color="green")
+                        prct += 1
                     elif color[i][j][0]==1:
                         gpd.GeoSeries(color[i][j][1]).plot(ax=ax, color="orange")
                     else:
@@ -187,10 +190,11 @@ def general_result(mission, gs_opportunities, poi_opportunities):
             green = Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='Observation possible')
             orange = Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=10, label='Area visible but minimum sza not reached')
             red =Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Observation impossible')
+            prct = (prct*100)/len(color[0])
             ax.legend(handles=[green, orange, red])
-            ax.set_title(f"Visibility map of {title}")
-            fig.savefig(result_folder / mission.get_name() / f"Visibility at {title}.png", bbox_inches='tight')
-            img = Image(result_folder / mission.get_name() / f"Visibility at {title}.png", width=400, height=300)
+            ax.set_title(f"{prct:.2f}% of {title} covered during the simulation ")
+            fig.savefig(result_folder / mission.get_name() / f"Coverage map of {title}.png", bbox_inches='tight')
+            img = Image(result_folder / mission.get_name() / f"coverage map of {title}.png", width=400, height=300)
             return img
         else:
             fig2d = plt.figure(figsize=(10, 6))

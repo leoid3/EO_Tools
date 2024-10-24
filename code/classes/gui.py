@@ -8,6 +8,7 @@ import tkintermapview as tkmap
 from satellite_tle import fetch_tle_from_celestrak
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from tkcalendar import DateEntry
 import numpy as np
 from datetime import timedelta, datetime
@@ -22,7 +23,6 @@ from functions.import_data import import_from_csv, import_poi_csv, import_gs_csv
 from functions.country import get_country_name, get_poly_coordinate
 from functions.coordinates_converter import latlong_to_cartesian
 from functions.save_result import save_gs_visibility, save_poi_visibility, general_result
-from functions.find_tm import centroid
 from functions.itur_model import get_attenuation
 
 #############################################################################################
@@ -1422,12 +1422,22 @@ class SatelliteSimulator(tk.Tk):
                         elevation_fin = zenith_angle.loc[date_fin.strftime("%Y-%m-%d %H:%M:%S")].elevation
                         mean_elevation = (elevation_ini+elevation_fin)/2
                         visibility.append((chosen_sat.get_name(), poi.get_name(), date_ini, date_fin, delta.seconds, mean_elevation))
-
+                sza_condition = []
+                for i in range(len(visibility)):
+                    if visibility[i][5] >= miss.get_minsza():
+                        sza_condition.append(True)
+                    else:
+                        sza_condition.append(False)
+                sza_color = ['green' if condition else 'red' for condition in sza_condition]
                 #Plot les durées de visibilité
                 ax_2D_3 = fig2d.add_subplot(313)
-                ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.35, color=list_colors, align='center')
+                ax_2D_3.bar([date.strftime('%Y-%m-%d %H:%M:%S') for date in date_ini_list], timedelta_list, width=0.35, color=sza_color, align='center')
                 ax_2D_3.set_ylabel('Times (s)')
-                ax_2D_3.legend()
+                legend_patches = [
+                Patch(color='green', label=f'Date meeting SZA >= {miss.get_minsza()}'),
+                Patch(color='red', label=f'Date not meeting SZA >= {miss.get_minsza()}')
+                ]
+                ax_2D_3.legend(handles=legend_patches)
                 plt.title(f"Visibilities duration at {poi.get_name()} with a swath of {chosen_sat.get_swath()} km")
                 plt.grid(True)
                 plt.xticks(rotation=45)
@@ -1477,16 +1487,19 @@ class SatelliteSimulator(tk.Tk):
         green = Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='Observation possible')
         orange = Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=10, label='Area visible but minimum sza not reached')
         red =Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Observation impossible')
+        prct = 0
         for i in range(len(square_visible)):
             if square_visible[i][0]:
                 if square_visible[i][1]:
                     gpd.GeoSeries(square_visible[i][2]).plot(ax=ax, color="green")
+                    prct += 1
                 else:
                     gpd.GeoSeries(square_visible[i][2]).plot(ax=ax, color="orange")
             else:
                 gpd.GeoSeries(square_visible[i][2]).plot(ax=ax, color="red")
         ax.legend(handles=[green, orange, red])
-        plt.title(f"Visibility map of {poi.get_name()}")
+        prct = (prct*100)/len(square_visible)
+        plt.title(f"{prct:.2f}% of {poi.get_name()} covered during the simulation ")
         fig.savefig(result_folder / miss.get_name() / f"Result {poi.get_name()} visibility ({chosen_sat.get_name()}) figure.png")
 
     def save_result(self):
@@ -1562,6 +1575,7 @@ class SatelliteSimulator(tk.Tk):
                     gs_visibility.append((sat[j].get_name(), len(interval)))
                 gs_opportunities.append((gs[i].get_name(), gs_visibility))
             general_result(mission, gs_opportunities, poi_opportunities)
+            showinfo("Message", "Mission report created successfully")
 
 #############################################################################################
 # Additional windows
