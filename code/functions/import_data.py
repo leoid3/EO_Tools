@@ -191,6 +191,9 @@ def import_from_csv(path):
     return er
 
 def import_poi_csv(filename):
+    """
+    Permet d'importer les données des POIs.
+    """
     er=0
     try:
         with open(filename, 'r') as file:
@@ -239,6 +242,9 @@ def import_poi_csv(filename):
     return er
 
 def import_gs_csv(filename):
+    """
+    Permet de d'importer les données des GS.
+    """
     er=0
     try:
         with open(filename, 'r') as file:

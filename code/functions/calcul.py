@@ -112,7 +112,6 @@ def calcul_traj(mission, map):
 
     return liste_marker
 
-
 def kepler_equation(E, M, e):
     return E - e * np.sin(E) - M
 
@@ -136,6 +135,9 @@ def true_anomaly(M, e):
     return nu
 
 def simulation_time(mission):
+    """
+    Permet de calculer le temps total de la simulation.
+    """
     t0=0
     dt=mission.get_timestep()
     delta = mission.get_TF() - mission.get_T0()
@@ -147,6 +149,9 @@ def simulation_time(mission):
     return delta, t0, tf, dt
 
 def calcul_swath(sat):
+    """
+    Permet de calculer la fauchée projetée au sol su satellite.
+    """
     swath = sat.get_swath()
     depointing = sat.get_depoiting()
     orb = sat.get_orbit()
@@ -159,6 +164,9 @@ def calcul_swath(sat):
     return equivalent_swath
 
 def gs_interval(x, y, z, lat, long, ele, gsx, gsy, gsz, dt, time):
+    """
+    Permet de calculer l'intervale de temps de visibilité.
+    """
     angle_list = []
     interval = []
     time_inter = []
@@ -186,6 +194,9 @@ def gs_interval(x, y, z, lat, long, ele, gsx, gsy, gsz, dt, time):
     return interval, angle_list
 
 def poi_interval(x, y, z, lat, long, poix, poiy, poiz, swath, dt, time):
+    """
+    Permet de calculer l'intervale de temps de visibilité.
+    """
     distance_list =[]
     time_inter = []
     angle_list = []
@@ -236,6 +247,9 @@ def poi_grid(x, y, z, lat, long, poix, poiy, poiz, swath, miss, tm, name, alt):
     return visible, sza
 
 def grid_bounds(poly, delta):
+    """
+    Permet de calculer la grille.
+    """
     minx, miny, maxx, maxy = poly.bounds
     nx = int((maxx - minx)/delta)
     ny = int((maxy - miny)/delta)
@@ -248,6 +262,9 @@ def grid_bounds(poly, delta):
     return grid
 
 def partition(poly):
+    """
+    Filtre les carré qui sont comprises dans le polygone.
+    """
     prepared_geom = prep(poly)
     if poly.area < 0.05:
         return None
@@ -257,6 +274,9 @@ def partition(poly):
         return grid
 
 def resolution_step(poly, min_delta=0.01, max_delta=1):
+    """
+    Permet de calculer dynamiquement la résolution de la grille.
+    """
     area = poly.area
     normalized_area = np.log1p(area)/np.log1p(50)
     delta = min_delta + (max_delta - min_delta) * normalized_area

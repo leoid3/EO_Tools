@@ -13,6 +13,9 @@ from functions.find_tm import centroid
 from functions.revisit import revisit_over_a_latitude, revi
 
 def save_gs_visibility(result, name):
+    """
+    Permet de sauvegarder les resultats des GS dans un fichier csv.
+    """
     if len(result) == 0:
         print("NO OPPORTUNITIES")
     else:
@@ -23,6 +26,9 @@ def save_gs_visibility(result, name):
             csvwriter.writerows(result)
 
 def save_poi_visibility(result, name):
+    """
+    Permet de sauvegarder les resultats des POIs dans un fichier csv.
+    """
     if len(result) == 0:
         print("NO OPPORTUNITIES")
     else:
@@ -33,8 +39,14 @@ def save_poi_visibility(result, name):
             csvwriter.writerows(result)
 
 def general_result(mission, gs_opportunities, poi_opportunities):
+    """
+    Permet de creer le mission report.pdf.
+    """
     # Function to replace markup with actual values
     def replace_placeholders(text, values):
+        """
+        Permet de remplacer les placeholder par les données de la simulation.
+        """
         for key, value in values.items():
             if value== poi:
                 new_value =''
@@ -96,6 +108,9 @@ def general_result(mission, gs_opportunities, poi_opportunities):
         return text
 
     def plot_result_gs(opportunities):
+        """
+        Permet de creer le graph des GS.
+        """
         fig2d = plt.figure(figsize=(10, 6))
         ax_2D = fig2d.add_subplot(111)
         temp = opportunities
@@ -117,6 +132,9 @@ def general_result(mission, gs_opportunities, poi_opportunities):
         return img
 
     def plot_result_poi(opportunities):
+        """
+        Permet de creer le graph des POIs.
+        """
         temp = opportunities
         
         if temp[1][0][0]:

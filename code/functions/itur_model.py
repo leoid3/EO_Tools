@@ -3,6 +3,9 @@ import itur #https://github.com/inigodelportillo/ITU-Rpy
 #source : https://www.nasa.gov/smallsat-institute/sst-soa/soa-communications/#9.2
 
 def get_attenuation(ele, band, lat, long, ant):
+    """
+    Permet de calculer l'atténuation.
+    """
     match band:
         case 'VHF':
             f = 0.2*itur.u.GHz
